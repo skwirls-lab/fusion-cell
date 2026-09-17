@@ -7,3 +7,7 @@ node_modules/
 playwright-report/
 test-results/
 *.log
+.pglite/
+/data/.pglite/
+next-env.d.ts
+tsconfig.tsbuildinfo

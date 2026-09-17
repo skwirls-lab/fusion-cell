@@ -303,8 +303,10 @@ find out for hours. Verify the clue chain mechanically here, not later.
 **`scripts/check-seed.ts` must assert, by querying the database:**
 - Row counts: ≥150 entities, ≥400 relationships, ≥80 reports, ≥120 events
 - Every one of the 12 clue reports exists and its body contains its required keyword
-- The path `Varro → Brightwater → Ashen Cartel → Hegemony` exists in `relationships` and BFS
-  returns it at ≤4 hops
+- An evidence path from `Ilsa Varro` to `Vantor Hegemony` exists in `relationships` and BFS
+  returns it at ≤6 hops **with location nodes excluded as intermediates** (every entity is
+  `located_at` Kestrel; hubs make every pair 2 hops apart). The path must pass through
+  Brightwater Hauling and the Ashen Cartel. See DECISIONS.md D5.
 - Full-text search for `LANTERN` returns ≥2 reports, and **≤6** — if a keyword search for
   `LANTERN` returns 30 reports, the signal is buried and Phase 5 will fail
 - Every red-herring entity exists and has ≥2 supporting reports (a red herring with no

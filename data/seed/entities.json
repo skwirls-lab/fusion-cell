@@ -1,0 +1,2542 @@
+[
+ {
+  "id": "loc_meridian_station",
+  "type": "location",
+  "name": "Meridian Station",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Concord Reach Fleet headquarters and Logistics Command.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -22,
+  "lat": 6,
+  "locationKind": "station"
+ },
+ {
+  "id": "loc_meridian_prime",
+  "type": "location",
+  "name": "Meridian Prime",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Home system of the Concord presence in the Reach.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -24,
+  "lat": 5,
+  "locationKind": "system"
+ },
+ {
+  "id": "loc_caldera_yards",
+  "type": "location",
+  "name": "Caldera Yards",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Fleet shipyard and refit facility.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -26,
+  "lat": 9,
+  "locationKind": "facility"
+ },
+ {
+  "id": "loc_ashford_relay",
+  "type": "location",
+  "name": "Ashford Relay",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Jump gate and signals collection station.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -18,
+  "lat": 2,
+  "locationKind": "gate"
+ },
+ {
+  "id": "loc_vellum_moon",
+  "type": "location",
+  "name": "Vellum Moon",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Agricultural moon; leave destination.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -20,
+  "lat": -6,
+  "locationKind": "moon"
+ },
+ {
+  "id": "loc_hollins_depot",
+  "type": "location",
+  "name": "Hollins Depot",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Forward logistics depot; convoy assembly point.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -14,
+  "lat": 4,
+  "locationKind": "facility"
+ },
+ {
+  "id": "loc_corran_gate",
+  "type": "location",
+  "name": "Corran Gate",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Eastern Concord jump gate onto the Long Lane.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -10,
+  "lat": 1,
+  "locationKind": "gate"
+ },
+ {
+  "id": "loc_port_amberly",
+  "type": "location",
+  "name": "Port Amberly",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Civilian port and customs post.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -16,
+  "lat": -10,
+  "locationKind": "station"
+ },
+ {
+  "id": "loc_sable_reach",
+  "type": "location",
+  "name": "Sable Reach",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Mining system.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -28,
+  "lat": -2,
+  "locationKind": "system"
+ },
+ {
+  "id": "loc_tarns_landing",
+  "type": "location",
+  "name": "Tarn's Landing",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Colony town; branch of Concord Reach Bank.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -12,
+  "lat": -14,
+  "locationKind": "city"
+ },
+ {
+  "id": "loc_kestrel",
+  "type": "location",
+  "name": "Free Port of Kestrel",
+  "aliases": [
+   "Kestrel",
+   "Kestrel Station"
+  ],
+  "factionId": "kestrel",
+  "description": "The neutral hub of the Reach. Everyone passes through.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 0,
+  "lat": 0,
+  "locationKind": "station"
+ },
+ {
+  "id": "loc_kestrel_prime",
+  "type": "location",
+  "name": "Kestrel Prime",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "System containing the Free Port.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 1,
+  "lat": -1,
+  "locationKind": "system"
+ },
+ {
+  "id": "loc_kestrel_low_docks",
+  "type": "location",
+  "name": "Kestrel Low Docks",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Bulk cargo and provisioning docks.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 0.4,
+  "lat": 0.3,
+  "locationKind": "facility"
+ },
+ {
+  "id": "loc_kestrel_high_docks",
+  "type": "location",
+  "name": "Kestrel High Docks",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Freight and salvage berths; company offices.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -0.3,
+  "lat": 0.6,
+  "locationKind": "facility"
+ },
+ {
+  "id": "loc_tallow_row",
+  "type": "location",
+  "name": "Tallow Row",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Tea houses, registered agents, and quiet booths.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 0.2,
+  "lat": -0.5,
+  "locationKind": "city"
+ },
+ {
+  "id": "loc_tessaly_gate",
+  "type": "location",
+  "name": "Tessaly Gate",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Jump gate on the Kestrel–Mirren route. The only eastern exit for Concord convoys.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 6,
+  "lat": -2,
+  "locationKind": "gate"
+ },
+ {
+  "id": "loc_tessaly_approach",
+  "type": "location",
+  "name": "Tessaly Approach",
+  "aliases": [],
+  "factionId": null,
+  "description": "Shipping lane from Kestrel to Tessaly Gate.",
+  "attributes": {
+   "from": "loc_kestrel",
+   "to": "loc_tessaly_gate"
+  },
+  "confidence": 1,
+  "lon": 5,
+  "lat": -1.5,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_mirren_drift",
+  "type": "location",
+  "name": "Mirren Drift",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Sparse system; transit point to Wyre.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 3,
+  "lat": 5,
+  "locationKind": "system"
+ },
+ {
+  "id": "loc_halcyon_belt",
+  "type": "location",
+  "name": "Halcyon Belt",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Asteroid belt; independent prospectors.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 4,
+  "lat": -8,
+  "locationKind": "system"
+ },
+ {
+  "id": "loc_wyre_station",
+  "type": "location",
+  "name": "Wyre Station",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Concord research station; Convoy 7 destination.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 2,
+  "lat": 9,
+  "locationKind": "station"
+ },
+ {
+  "id": "loc_vantor_bastion",
+  "type": "location",
+  "name": "Vantor Bastion",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Hegemony regional command.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 24,
+  "lat": 3,
+  "locationKind": "station"
+ },
+ {
+  "id": "loc_vantor_core",
+  "type": "location",
+  "name": "Vantor Core",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Hegemony core system in the Reach.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 26,
+  "lat": 2,
+  "locationKind": "system"
+ },
+ {
+  "id": "loc_ironmark_yards",
+  "type": "location",
+  "name": "Ironmark Yards",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Raider construction yard.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 22,
+  "lat": 8,
+  "locationKind": "facility"
+ },
+ {
+  "id": "loc_dusk_gate",
+  "type": "location",
+  "name": "Dusk Gate",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Hegemony-controlled gate; picket line.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 16,
+  "lat": 0,
+  "locationKind": "gate"
+ },
+ {
+  "id": "loc_kessarine",
+  "type": "location",
+  "name": "Kessarine",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Raider group home port.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 19,
+  "lat": -5,
+  "locationKind": "system"
+ },
+ {
+  "id": "loc_outpost_threnody",
+  "type": "location",
+  "name": "Outpost Threnody",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Forward facility one jump east of Tessaly Gate.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 13,
+  "lat": 3,
+  "locationKind": "facility"
+ },
+ {
+  "id": "loc_ruun_anchorage",
+  "type": "location",
+  "name": "Ruun Anchorage",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Fuel and repair anchorage.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 14,
+  "lat": -6,
+  "locationKind": "station"
+ },
+ {
+  "id": "loc_caul_nebula",
+  "type": "location",
+  "name": "Caul Nebula Edge",
+  "aliases": [],
+  "factionId": null,
+  "description": "Sensor-degraded region.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 11,
+  "lat": 6,
+  "locationKind": "system"
+ },
+ {
+  "id": "loc_ashen_hollow",
+  "type": "location",
+  "name": "Ashen Hollow",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Cartel home station, hollowed asteroid.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -4,
+  "lat": -15,
+  "locationKind": "station"
+ },
+ {
+  "id": "loc_gallows_reef",
+  "type": "location",
+  "name": "Gallows Reef",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Wreck field; salvage and smuggling.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 2,
+  "lat": -16,
+  "locationKind": "system"
+ },
+ {
+  "id": "loc_cinder_moon",
+  "type": "location",
+  "name": "Cinder Moon",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Cartel refinery moon.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -7,
+  "lat": -12,
+  "locationKind": "moon"
+ },
+ {
+  "id": "loc_smugglers_notch",
+  "type": "location",
+  "name": "Smuggler's Notch",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Hidden transfer point.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 8,
+  "lat": -13,
+  "locationKind": "facility"
+ },
+ {
+  "id": "loc_pale_sound",
+  "type": "location",
+  "name": "Pale Sound",
+  "aliases": [],
+  "factionId": null,
+  "description": "Empty system on the southern edge.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -2,
+  "lat": -18,
+  "locationKind": "system"
+ },
+ {
+  "id": "loc_pilgrims_rest",
+  "type": "location",
+  "name": "Pilgrim's Rest",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Pilgrim waystation.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -6,
+  "lat": 12,
+  "locationKind": "station"
+ },
+ {
+  "id": "loc_solace",
+  "type": "location",
+  "name": "Solace",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Monastic settlement.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -8,
+  "lat": 16,
+  "locationKind": "system"
+ },
+ {
+  "id": "loc_northwatch_beacon",
+  "type": "location",
+  "name": "Northwatch Beacon",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Concord survey drone base.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 12,
+  "lat": 14,
+  "locationKind": "facility"
+ },
+ {
+  "id": "loc_fenwick_crossing",
+  "type": "location",
+  "name": "Fenwick Crossing",
+  "aliases": [],
+  "factionId": null,
+  "description": "Minor gate to the northern systems.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": -3,
+  "lat": 7,
+  "locationKind": "gate"
+ },
+ {
+  "id": "loc_orrin_shoals",
+  "type": "location",
+  "name": "Orrin Shoals",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Prospecting system.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 7,
+  "lat": 11,
+  "locationKind": "system"
+ },
+ {
+  "id": "loc_harrow_deep",
+  "type": "location",
+  "name": "Harrow Deep",
+  "aliases": [],
+  "factionId": null,
+  "description": "Unclaimed deep system.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": 18,
+  "lat": 12,
+  "locationKind": "system"
+ },
+ {
+  "id": "loc_long_lane",
+  "type": "location",
+  "name": "The Long Lane",
+  "aliases": [],
+  "factionId": null,
+  "description": "Corran Gate to Kestrel.",
+  "attributes": {
+   "from": "loc_corran_gate",
+   "to": "loc_kestrel"
+  },
+  "confidence": 1,
+  "lon": -5,
+  "lat": 0.5,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_southern_run",
+  "type": "location",
+  "name": "Southern Run",
+  "aliases": [],
+  "factionId": null,
+  "description": "Kestrel to Ashen Hollow.",
+  "attributes": {
+   "from": "loc_kestrel",
+   "to": "loc_ashen_hollow"
+  },
+  "confidence": 1,
+  "lon": -2,
+  "lat": -8,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_dusk_road",
+  "type": "location",
+  "name": "Dusk Road",
+  "aliases": [],
+  "factionId": null,
+  "description": "Tessaly Gate to Dusk Gate. Sensor-thin.",
+  "attributes": {
+   "from": "loc_tessaly_gate",
+   "to": "loc_dusk_gate"
+  },
+  "confidence": 1,
+  "lon": 11,
+  "lat": -1,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_lane_hollins_corran",
+  "type": "location",
+  "name": "Hollins–Corran",
+  "aliases": [],
+  "factionId": null,
+  "description": "Shipping lane Hollins Depot – Corran Gate.",
+  "attributes": {
+   "from": "loc_hollins_depot",
+   "to": "loc_corran_gate"
+  },
+  "confidence": 1,
+  "lon": -12,
+  "lat": 2.5,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_lane_threnody",
+  "type": "location",
+  "name": "Threnody spur",
+  "aliases": [],
+  "factionId": null,
+  "description": "Shipping lane Outpost Threnody – Dusk Gate.",
+  "attributes": {
+   "from": "loc_outpost_threnody",
+   "to": "loc_dusk_gate"
+  },
+  "confidence": 1,
+  "lon": 14.5,
+  "lat": 1.5,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_lane_mirren",
+  "type": "location",
+  "name": "Mirren leg",
+  "aliases": [],
+  "factionId": null,
+  "description": "Shipping lane Tessaly Gate – Mirren Drift.",
+  "attributes": {
+   "from": "loc_tessaly_gate",
+   "to": "loc_mirren_drift"
+  },
+  "confidence": 1,
+  "lon": 4.5,
+  "lat": 1.5,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_lane_wyre",
+  "type": "location",
+  "name": "Wyre leg",
+  "aliases": [],
+  "factionId": null,
+  "description": "Shipping lane Mirren Drift – Wyre Station.",
+  "attributes": {
+   "from": "loc_mirren_drift",
+   "to": "loc_wyre_station"
+  },
+  "confidence": 1,
+  "lon": 2.5,
+  "lat": 7,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_lane_gallows",
+  "type": "location",
+  "name": "Reef run",
+  "aliases": [],
+  "factionId": null,
+  "description": "Shipping lane Ashen Hollow – Gallows Reef.",
+  "attributes": {
+   "from": "loc_ashen_hollow",
+   "to": "loc_gallows_reef"
+  },
+  "confidence": 1,
+  "lon": -1,
+  "lat": -15.5,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_lane_meridian_ashford",
+  "type": "location",
+  "name": "Meridian–Ashford",
+  "aliases": [],
+  "factionId": null,
+  "description": "Shipping lane Meridian Station – Ashford Relay.",
+  "attributes": {
+   "from": "loc_meridian_station",
+   "to": "loc_ashford_relay"
+  },
+  "confidence": 1,
+  "lon": -20,
+  "lat": 4,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_lane_ashford_hollins",
+  "type": "location",
+  "name": "Ashford–Hollins",
+  "aliases": [],
+  "factionId": null,
+  "description": "Shipping lane Ashford Relay – Hollins Depot.",
+  "attributes": {
+   "from": "loc_ashford_relay",
+   "to": "loc_hollins_depot"
+  },
+  "confidence": 1,
+  "lon": -16,
+  "lat": 3,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_lane_dusk_bastion",
+  "type": "location",
+  "name": "Bastion road",
+  "aliases": [],
+  "factionId": null,
+  "description": "Shipping lane Dusk Gate – Vantor Bastion.",
+  "attributes": {
+   "from": "loc_dusk_gate",
+   "to": "loc_vantor_bastion"
+  },
+  "confidence": 1,
+  "lon": 20,
+  "lat": 1.5,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_lane_kessarine",
+  "type": "location",
+  "name": "Kessarine spur",
+  "aliases": [],
+  "factionId": null,
+  "description": "Shipping lane Dusk Gate – Kessarine.",
+  "attributes": {
+   "from": "loc_dusk_gate",
+   "to": "loc_kessarine"
+  },
+  "confidence": 1,
+  "lon": 17.5,
+  "lat": -2.5,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_lane_fenwick",
+  "type": "location",
+  "name": "North road",
+  "aliases": [],
+  "factionId": null,
+  "description": "Shipping lane Free Port of Kestrel – Fenwick Crossing.",
+  "attributes": {
+   "from": "loc_kestrel",
+   "to": "loc_fenwick_crossing"
+  },
+  "confidence": 1,
+  "lon": -1.5,
+  "lat": 3.5,
+  "locationKind": "lane"
+ },
+ {
+  "id": "loc_lane_pilgrim",
+  "type": "location",
+  "name": "Pilgrim road",
+  "aliases": [],
+  "factionId": null,
+  "description": "Shipping lane Fenwick Crossing – Pilgrim's Rest.",
+  "attributes": {
+   "from": "loc_fenwick_crossing",
+   "to": "loc_pilgrims_rest"
+  },
+  "confidence": 1,
+  "lon": -4.5,
+  "lat": 9.5,
+  "locationKind": "lane"
+ },
+ {
+  "id": "per_ilsa_varro",
+  "type": "person",
+  "name": "Ilsa Varro",
+  "aliases": [
+   "Lt Cmdr Varro",
+   "I. Varro"
+  ],
+  "factionId": "concord",
+  "description": "Lieutenant Commander, Concord Reach Fleet Logistics Command, Movement Tables Section, Meridian Station.",
+  "attributes": {
+   "rank": "Lieutenant Commander",
+   "branch": "Logistics",
+   "billet": "Movement Tables Section",
+   "station": "Meridian Station",
+   "clearance": "Convoy scheduling",
+   "next_of_kin": "Ansel Varro (brother), Tarn's Landing"
+  },
+  "confidence": 0.95,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_ansel_varro",
+  "type": "person",
+  "name": "Ansel Varro",
+  "aliases": [
+   "A. Varro"
+  ],
+  "factionId": "unaffiliated",
+  "description": "Civilian resident of Tarn's Landing. No registered business. Brother of Lt Cmdr Ilsa Varro.",
+  "attributes": {
+   "residence": "Tarn's Landing",
+   "occupation": "none registered"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_doss_renley",
+  "type": "person",
+  "name": "Doss Renley",
+  "aliases": [
+   "Cmdr Renley",
+   "D. Renley"
+  ],
+  "factionId": "concord",
+  "description": "Commander, Concord Reach Fleet Logistics Command, Convoy Planning. Meridian Station.",
+  "attributes": {
+   "rank": "Commander",
+   "branch": "Planning",
+   "billet": "Convoy Planning",
+   "station": "Meridian Station",
+   "clearance": "Convoy scheduling"
+  },
+  "confidence": 0.95,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_teodor_mallick",
+  "type": "person",
+  "name": "Teodor Mallick",
+  "aliases": [
+   "Capt Mallick"
+  ],
+  "factionId": "concord",
+  "description": "Captain, commanding Concord Convoy 7.",
+  "attributes": {
+   "rank": "Captain"
+  },
+  "confidence": 0.95,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_sera_okonkwo_vane",
+  "type": "person",
+  "name": "Sera Okonkwo-Vane",
+  "aliases": [
+   "Admiral Okonkwo-Vane"
+  ],
+  "factionId": "concord",
+  "description": "Admiral commanding Concord Reach Fleet.",
+  "attributes": {
+   "rank": "Admiral"
+  },
+  "confidence": 0.95,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_greyfinch",
+  "type": "person",
+  "name": "GREYFINCH",
+  "aliases": [
+   "Source GREYFINCH"
+  ],
+  "factionId": "concord",
+  "description": "Concord human source on Kestrel with access to port-district commerce. 11 prior reports, 9 corroborated.",
+  "attributes": {
+   "source_type": "HUMINT",
+   "reliability": "B"
+  },
+  "confidence": 0.8,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_petra_lindqvist",
+  "type": "person",
+  "name": "Petra Lindqvist",
+  "aliases": [
+   "P. Lindqvist"
+  ],
+  "factionId": "kestrel",
+  "description": "Manager and sole director of Brightwater Hauling, Kestrel High Docks.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_ossian_kade",
+  "type": "person",
+  "name": "Ossian Kade",
+  "aliases": [
+   "O. Kade",
+   "Captain Kade"
+  ],
+  "factionId": "kestrel",
+  "description": "Master of CV Cinder Moth, Brightwater Hauling.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_quill_adeyemi",
+  "type": "person",
+  "name": "Quill Adeyemi",
+  "aliases": [
+   "Port Master Adeyemi"
+  ],
+  "factionId": "kestrel",
+  "description": "Port Master, Kestrel Port Authority.",
+  "attributes": {},
+  "confidence": 0.95,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_lio_sandoval",
+  "type": "person",
+  "name": "Lio Sandoval",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Journalist, Kestrel Ledger.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_hal_brenner",
+  "type": "person",
+  "name": "Hal Brenner",
+  "aliases": [
+   "Halloway Brenner"
+  ],
+  "factionId": "kestrel",
+  "description": "Proprietor of Halloway & Sons Trading, licensed salvage broker.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_marrow_veil",
+  "type": "person",
+  "name": "Marrow Veil",
+  "aliases": [
+   "the Quartermaster"
+  ],
+  "factionId": "cartel",
+  "description": "Ashen Cartel broker running the Kestrel cell.",
+  "attributes": {},
+  "confidence": 0.7,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_ivo_draskovic",
+  "type": "person",
+  "name": "Ivo Draskovic",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Ashen Cartel financier; controls the front accounts.",
+  "attributes": {},
+  "confidence": 0.65,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_kael_vantor_ruun",
+  "type": "person",
+  "name": "Kael Vantor-Ruun",
+  "aliases": [
+   "Strategos Vantor-Ruun"
+  ],
+  "factionId": "hegemony",
+  "description": "Strategos commanding the Vantor 9th Raider Group.",
+  "attributes": {
+   "rank": "Strategos"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_thessaly_morn",
+  "type": "person",
+  "name": "Thessaly Morn",
+  "aliases": [
+   "Envoy Morn"
+  ],
+  "factionId": "hegemony",
+  "description": "Hegemony envoy resident on Kestrel; assessed liaison to Vantor Expeditionary Command.",
+  "attributes": {},
+  "confidence": 0.7,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_logcom",
+  "type": "organization",
+  "name": "Concord Reach Fleet Logistics Command",
+  "aliases": [
+   "LOGCOM",
+   "Logistics Command"
+  ],
+  "factionId": "concord",
+  "description": "Runs convoy scheduling (Movement Tables Section) and planning for the Reach.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_convoy_7",
+  "type": "organization",
+  "name": "Concord Convoy 7",
+  "aliases": [
+   "Convoy 7",
+   "Convoy Seven"
+  ],
+  "factionId": "concord",
+  "description": "Six merchant hulls plus escort CNS Harrowgate. Reactor assemblies and medical stores for Wyre Station.",
+  "attributes": {
+   "escort": "CNS Harrowgate",
+   "hulls": 6,
+   "route": [
+    "Hollins Depot",
+    "Corran Gate",
+    "Free Port of Kestrel",
+    "Tessaly Approach",
+    "Tessaly Gate",
+    "Mirren Drift",
+    "Wyre Station"
+   ],
+   "schedule_bulletins": [
+    "2026-08-02T09:00:00.000Z",
+    "2026-08-12T09:00:00.000Z",
+    "2026-08-22T09:00:00.000Z"
+   ],
+   "departure": "2026-08-29T06:00:00.000Z",
+   "tessaly_transit_window": [
+    "2026-08-31T02:00:00.000Z",
+    "2026-08-31T06:00:00.000Z"
+   ]
+  },
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_brightwater",
+  "type": "organization",
+  "name": "Brightwater Hauling",
+  "aliases": [
+   "Brightwater"
+  ],
+  "factionId": "kestrel",
+  "description": "Two-year-old freight company, Kestrel High Docks. Sole director P. Lindqvist. Registered agent at Tallow Row. Runs the Mirren Drift route.",
+  "attributes": {
+   "registered": "Kestrel High Docks",
+   "director": "Petra Lindqvist",
+   "hulls": [
+    "CV Cinder Moth",
+    "CV Brightwater Tern"
+   ]
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_tallow_wick",
+  "type": "organization",
+  "name": "Tallow & Wick Provisions",
+  "aliases": [
+   "Tallow and Wick"
+  ],
+  "factionId": "cartel",
+  "description": "Provisioning company registered at Kestrel Low Docks with no contracts and no warehouse. Assessed Ashen Cartel front.",
+  "attributes": {},
+  "confidence": 0.6,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_ashen_cartel",
+  "type": "organization",
+  "name": "Ashen Cartel",
+  "aliases": [
+   "the Cartel"
+  ],
+  "factionId": "cartel",
+  "description": "Smuggling and arms network based at Ashen Hollow.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_9th_raider",
+  "type": "organization",
+  "name": "Vantor 9th Raider Group",
+  "aliases": [
+   "9th Raider Group",
+   "Ninth Raiders"
+  ],
+  "factionId": "hegemony",
+  "description": "Hegemony raider formation home-ported at Kessarine. Kessarine-pattern corvettes.",
+  "attributes": {},
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_vantor_hegemony",
+  "type": "organization",
+  "name": "Vantor Hegemony",
+  "aliases": [
+   "the Hegemony",
+   "Vantor Expeditionary Command"
+  ],
+  "factionId": "hegemony",
+  "description": "Adversary power east of Dusk Gate. Expeditionary Command directs Reach operations from Vantor Bastion.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_halloway",
+  "type": "organization",
+  "name": "Halloway & Sons Trading",
+  "aliases": [
+   "Halloway & Sons",
+   "Halloway"
+  ],
+  "factionId": "kestrel",
+  "description": "Licensed salvage broker, Kestrel High Docks. Pending Concord Fleet hull-recovery tender.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_kestrel_port_authority",
+  "type": "organization",
+  "name": "Kestrel Port Authority",
+  "aliases": [
+   "KPA"
+  ],
+  "factionId": "kestrel",
+  "description": "Licensing, manifests, and transponder feed for the Free Port.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_kestrel_ledger",
+  "type": "organization",
+  "name": "Kestrel Ledger",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Independent Kestrel newspaper.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_meridian_mutual",
+  "type": "organization",
+  "name": "Meridian Mutual Bank",
+  "aliases": [
+   "MMB"
+  ],
+  "factionId": "kestrel",
+  "description": "Commercial bank with a Kestrel branch; compliance desk shares extracts with Concord.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_concord_reach_bank",
+  "type": "organization",
+  "name": "Concord Reach Bank",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Retail bank; Tarn's Landing branch.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_cinder_moth",
+  "type": "vessel",
+  "name": "CV Cinder Moth",
+  "aliases": [
+   "Cinder Moth"
+  ],
+  "factionId": "kestrel",
+  "description": "Brightwater Hauling freighter, Kestrel registry. Master O. Kade.",
+  "attributes": {
+   "registry": "Kestrel",
+   "operator": "Brightwater Hauling",
+   "class": "light freighter"
+  },
+  "confidence": 0.95,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_brightwater_tern",
+  "type": "vessel",
+  "name": "CV Brightwater Tern",
+  "aliases": [
+   "Brightwater Tern"
+  ],
+  "factionId": "kestrel",
+  "description": "Brightwater Hauling second hull, delivered mid-August.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_harrowgate",
+  "type": "vessel",
+  "name": "CNS Harrowgate",
+  "aliases": [
+   "Harrowgate"
+  ],
+  "factionId": "concord",
+  "description": "Concord frigate, Convoy 7 escort.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_palisade",
+  "type": "vessel",
+  "name": "CNS Palisade",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Concord frigate, Meridian picket.",
+  "attributes": {},
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_larkspur",
+  "type": "vessel",
+  "name": "MV Larkspur",
+  "aliases": [
+   "Larkspur"
+  ],
+  "factionId": "kestrel",
+  "description": "Halloway & Sons salvage vessel.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_ironvale",
+  "type": "vessel",
+  "name": "VHS Ironvale",
+  "aliases": [
+   "Ironvale"
+  ],
+  "factionId": "hegemony",
+  "description": "Kessarine-pattern raider corvette, 9th Raider Group.",
+  "attributes": {},
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_duskwarden",
+  "type": "vessel",
+  "name": "VHS Duskwarden",
+  "aliases": [
+   "Duskwarden"
+  ],
+  "factionId": "hegemony",
+  "description": "Kessarine-pattern raider corvette, 9th Raider Group.",
+  "attributes": {},
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_cinderclaw",
+  "type": "vessel",
+  "name": "VHS Cinderclaw",
+  "aliases": [
+   "Cinderclaw"
+  ],
+  "factionId": "hegemony",
+  "description": "Raider corvette, 9th Raider Group.",
+  "attributes": {},
+  "confidence": 0.7,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "acc_kmb_4471",
+  "type": "account",
+  "name": "ACC-KMB-4471",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Brightwater Hauling operating account, Meridian Mutual Bank, Kestrel.",
+  "attributes": {
+   "bank": "Meridian Mutual Bank",
+   "holder": "Brightwater Hauling"
+  },
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "acc_kmb_9902",
+  "type": "account",
+  "name": "ACC-KMB-9902",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Tallow & Wick Provisions account, Meridian Mutual Bank. Inbound from Cartel-linked accounts.",
+  "attributes": {
+   "bank": "Meridian Mutual Bank",
+   "holder": "Tallow & Wick Provisions"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "acc_crb_1187",
+  "type": "account",
+  "name": "ACC-CRB-1187",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Ansel Varro personal account, Concord Reach Bank, Tarn's Landing. Opened 28 JUL.",
+  "attributes": {
+   "bank": "Concord Reach Bank",
+   "holder": "Ansel Varro",
+   "opened": "2026-07-28"
+  },
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "acc_kmb_3310",
+  "type": "account",
+  "name": "ACC-KMB-3310",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Halloway & Sons Trading account, Meridian Mutual Bank.",
+  "attributes": {
+   "bank": "Meridian Mutual Bank",
+   "holder": "Halloway & Sons Trading"
+  },
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n001",
+  "type": "organization",
+  "name": "Escort Squadron 4",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Concord Reach Fleet formation.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n002",
+  "type": "organization",
+  "name": "Hollins Depot Quartermaster",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Concord Reach Fleet formation.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n003",
+  "type": "organization",
+  "name": "Ashford Signals Detachment",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Concord Reach Fleet formation.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n004",
+  "type": "organization",
+  "name": "Vantor Picket Flotilla",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Vantor Hegemony formation.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n005",
+  "type": "organization",
+  "name": "Dusk Gate Customs Directorate",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Vantor Hegemony formation.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n006",
+  "type": "organization",
+  "name": "Ironmark Yard Command",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Vantor Hegemony formation.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n007",
+  "type": "organization",
+  "name": "Reef Runners",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Ashen Cartel crew.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n008",
+  "type": "organization",
+  "name": "Notch Crew",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Ashen Cartel crew.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n009",
+  "type": "organization",
+  "name": "Cinder Moon Refinery Syndicate",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Ashen Cartel crew.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n010",
+  "type": "organization",
+  "name": "Kestrel Merchants Guild",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Trade association for Free Port merchants.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n011",
+  "type": "organization",
+  "name": "Order of the Quiet Lamp",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Pilgrim order based at Solace and Pilgrim's Rest.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n012",
+  "type": "organization",
+  "name": "Halcyon Prospectors Co-operative",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Independent belt miners.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n013",
+  "type": "organization",
+  "name": "Meridian Co-operative",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Commercial freight and trading concern.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n014",
+  "type": "organization",
+  "name": "Northwatch Provisioners",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Commercial freight and trading concern.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n015",
+  "type": "organization",
+  "name": "Corran Freight",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Commercial freight and trading concern.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n016",
+  "type": "organization",
+  "name": "Meridian Outfitters",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Commercial freight and trading concern.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "org_n017",
+  "type": "organization",
+  "name": "Solace Provisioners",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Commercial freight and trading concern.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n018",
+  "type": "person",
+  "name": "Ottilie Sinclair",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Warrant Officer, drone maintenance.",
+  "attributes": {
+   "role": "Warrant Officer, drone maintenance"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n019",
+  "type": "person",
+  "name": "Baltasar Haldane",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Ensign, signals.",
+  "attributes": {
+   "role": "Ensign, signals"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n020",
+  "type": "person",
+  "name": "Nell Ibarra",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Lieutenant Commander, escort operations.",
+  "attributes": {
+   "role": "Lieutenant Commander, escort operations"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n021",
+  "type": "person",
+  "name": "Brigid Petrov",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Lieutenant Commander, escort operations.",
+  "attributes": {
+   "role": "Lieutenant Commander, escort operations"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n022",
+  "type": "person",
+  "name": "Cassius Greaves",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Ensign, signals.",
+  "attributes": {
+   "role": "Ensign, signals"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n023",
+  "type": "person",
+  "name": "Nell Haldane",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Commander, depot administration.",
+  "attributes": {
+   "role": "Commander, depot administration"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n024",
+  "type": "person",
+  "name": "Brigid Lindgren",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Guild secretary.",
+  "attributes": {
+   "role": "guild secretary"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n025",
+  "type": "person",
+  "name": "Cassius Drummond",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Merchant captain.",
+  "attributes": {
+   "role": "merchant captain"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n026",
+  "type": "person",
+  "name": "Jorun Ferrante",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Guild secretary.",
+  "attributes": {
+   "role": "guild secretary"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n027",
+  "type": "person",
+  "name": "Brigid Oduya",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Tea house proprietor.",
+  "attributes": {
+   "role": "tea house proprietor"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n028",
+  "type": "person",
+  "name": "Corwin Rossi",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Tea house proprietor.",
+  "attributes": {
+   "role": "tea house proprietor"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n029",
+  "type": "person",
+  "name": "Ottilie Thorne",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Merchant captain.",
+  "attributes": {
+   "role": "merchant captain"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n030",
+  "type": "person",
+  "name": "Imani Ibarra",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Salvage appraiser.",
+  "attributes": {
+   "role": "salvage appraiser"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n031",
+  "type": "person",
+  "name": "Ezio Yilmaz",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Reef pilot.",
+  "attributes": {
+   "role": "reef pilot"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n032",
+  "type": "person",
+  "name": "Ottilie Greaves",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Runner.",
+  "attributes": {
+   "role": "runner"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n033",
+  "type": "person",
+  "name": "Halima Greaves",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Runner.",
+  "attributes": {
+   "role": "runner"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n034",
+  "type": "person",
+  "name": "Anselm Ferrante",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Runner.",
+  "attributes": {
+   "role": "runner"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n035",
+  "type": "person",
+  "name": "Adaeze Sinclair",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Customs director.",
+  "attributes": {
+   "role": "customs director"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n036",
+  "type": "person",
+  "name": "Oskar Hale",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Flotilla adjutant.",
+  "attributes": {
+   "role": "flotilla adjutant"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n037",
+  "type": "person",
+  "name": "Fyodor Ferrante",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Yard engineer.",
+  "attributes": {
+   "role": "yard engineer"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n038",
+  "type": "person",
+  "name": "Sven Holm",
+  "aliases": [],
+  "factionId": "hegemony",
+  "description": "Customs director.",
+  "attributes": {
+   "role": "customs director"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n039",
+  "type": "person",
+  "name": "Tobin Novak",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Prospector.",
+  "attributes": {
+   "role": "prospector"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n040",
+  "type": "person",
+  "name": "Hesper Rossi",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Prospector.",
+  "attributes": {
+   "role": "prospector"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n041",
+  "type": "person",
+  "name": "Hesper Petrov",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Itinerant trader.",
+  "attributes": {
+   "role": "itinerant trader"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n042",
+  "type": "person",
+  "name": "Fyodor Meret",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Itinerant trader.",
+  "attributes": {
+   "role": "itinerant trader"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "per_n043",
+  "type": "person",
+  "name": "Cassius Petrov",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Itinerant trader.",
+  "attributes": {
+   "role": "itinerant trader"
+  },
+  "confidence": 0.85,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n044",
+  "type": "vessel",
+  "name": "CV Wheatear",
+  "aliases": [
+   "Wheatear"
+  ],
+  "factionId": "kestrel",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "light freighter"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n045",
+  "type": "vessel",
+  "name": "CV Marram",
+  "aliases": [
+   "Marram"
+  ],
+  "factionId": "kestrel",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "passenger packet"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n046",
+  "type": "vessel",
+  "name": "CV Nightjar",
+  "aliases": [
+   "Nightjar"
+  ],
+  "factionId": "kestrel",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "passenger packet"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n047",
+  "type": "vessel",
+  "name": "CV Bittern",
+  "aliases": [
+   "Bittern"
+  ],
+  "factionId": "kestrel",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "passenger packet"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n048",
+  "type": "vessel",
+  "name": "CV Godwit",
+  "aliases": [
+   "Godwit"
+  ],
+  "factionId": "kestrel",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "passenger packet"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n049",
+  "type": "vessel",
+  "name": "CV Bramblefinch",
+  "aliases": [
+   "Bramblefinch"
+  ],
+  "factionId": "kestrel",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "salvage tug"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n050",
+  "type": "vessel",
+  "name": "MV Knot",
+  "aliases": [
+   "Knot"
+  ],
+  "factionId": "unaffiliated",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "passenger packet"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n051",
+  "type": "vessel",
+  "name": "MV Redshank",
+  "aliases": [
+   "Redshank"
+  ],
+  "factionId": "unaffiliated",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "light freighter"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n052",
+  "type": "vessel",
+  "name": "MV Ashfall",
+  "aliases": [
+   "Ashfall"
+  ],
+  "factionId": "unaffiliated",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "bulk hauler"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n053",
+  "type": "vessel",
+  "name": "MV Dunlin",
+  "aliases": [
+   "Dunlin"
+  ],
+  "factionId": "unaffiliated",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "bulk hauler"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n054",
+  "type": "vessel",
+  "name": "MV Stonechat",
+  "aliases": [
+   "Stonechat"
+  ],
+  "factionId": "unaffiliated",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "passenger packet"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n055",
+  "type": "vessel",
+  "name": "CNS Skylark",
+  "aliases": [
+   "Skylark"
+  ],
+  "factionId": "concord",
+  "description": "Concord Reach Fleet hull.",
+  "attributes": {
+   "class": "frigate"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n056",
+  "type": "vessel",
+  "name": "CNS Cormorant",
+  "aliases": [
+   "Cormorant"
+  ],
+  "factionId": "concord",
+  "description": "Concord Reach Fleet hull.",
+  "attributes": {
+   "class": "corvette"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n057",
+  "type": "vessel",
+  "name": "CNS Curlew",
+  "aliases": [
+   "Curlew"
+  ],
+  "factionId": "concord",
+  "description": "Concord Reach Fleet hull.",
+  "attributes": {
+   "class": "corvette"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n058",
+  "type": "vessel",
+  "name": "CNS Turnstone",
+  "aliases": [
+   "Turnstone"
+  ],
+  "factionId": "concord",
+  "description": "Concord Reach Fleet hull.",
+  "attributes": {
+   "class": "tender"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n059",
+  "type": "vessel",
+  "name": "VHS Plover",
+  "aliases": [
+   "Plover"
+  ],
+  "factionId": "hegemony",
+  "description": "Hegemony hull.",
+  "attributes": {
+   "class": "tender"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n060",
+  "type": "vessel",
+  "name": "VHS Sandpiper",
+  "aliases": [
+   "Sandpiper"
+  ],
+  "factionId": "hegemony",
+  "description": "Hegemony hull.",
+  "attributes": {
+   "class": "tender"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n061",
+  "type": "vessel",
+  "name": "VHS Lapwing",
+  "aliases": [
+   "Lapwing"
+  ],
+  "factionId": "hegemony",
+  "description": "Hegemony hull.",
+  "attributes": {
+   "class": "frigate"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n062",
+  "type": "vessel",
+  "name": "MV Whimbrel",
+  "aliases": [
+   "Whimbrel"
+  ],
+  "factionId": "cartel",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "bulk hauler"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n063",
+  "type": "vessel",
+  "name": "MV Grey Heron",
+  "aliases": [
+   "Grey Heron"
+  ],
+  "factionId": "cartel",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "light freighter"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n064",
+  "type": "vessel",
+  "name": "MV Saltmarsh",
+  "aliases": [
+   "Saltmarsh"
+  ],
+  "factionId": "cartel",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "passenger packet"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "ves_n065",
+  "type": "vessel",
+  "name": "MV Thistledown",
+  "aliases": [
+   "Thistledown"
+  ],
+  "factionId": "cartel",
+  "description": "Merchant hull.",
+  "attributes": {
+   "class": "light freighter"
+  },
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "acc_n066",
+  "type": "account",
+  "name": "ACC-VBK-7509",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Solace Provisioners account.",
+  "attributes": {
+   "holder": "Solace Provisioners"
+  },
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "acc_n067",
+  "type": "account",
+  "name": "ACC-VBK-2607",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Hollins Depot Quartermaster account.",
+  "attributes": {
+   "holder": "Hollins Depot Quartermaster"
+  },
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "acc_n068",
+  "type": "account",
+  "name": "ACC-CRB-7353",
+  "aliases": [],
+  "factionId": "concord",
+  "description": "Corran Freight account.",
+  "attributes": {
+   "holder": "Corran Freight"
+  },
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "acc_n069",
+  "type": "account",
+  "name": "ACC-CRB-7802",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Cinder Moon Refinery Syndicate account.",
+  "attributes": {
+   "holder": "Cinder Moon Refinery Syndicate"
+  },
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "acc_n070",
+  "type": "account",
+  "name": "ACC-VBK-6204",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Kestrel Merchants Guild account.",
+  "attributes": {
+   "holder": "Kestrel Merchants Guild"
+  },
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "acc_n071",
+  "type": "account",
+  "name": "ACC-CRB-3492",
+  "aliases": [],
+  "factionId": "cartel",
+  "description": "Notch Crew account.",
+  "attributes": {
+   "holder": "Notch Crew"
+  },
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "acc_n072",
+  "type": "account",
+  "name": "ACC-VBK-9905",
+  "aliases": [],
+  "factionId": "kestrel",
+  "description": "Northwatch Provisioners account.",
+  "attributes": {
+   "holder": "Northwatch Provisioners"
+  },
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "acc_n073",
+  "type": "account",
+  "name": "ACC-KMB-3530",
+  "aliases": [],
+  "factionId": "unaffiliated",
+  "description": "Halcyon Prospectors Co-operative account.",
+  "attributes": {
+   "holder": "Halcyon Prospectors Co-operative"
+  },
+  "confidence": 1,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "eqp_n074",
+  "type": "equipment",
+  "name": "Kessarine-pattern corvette hull",
+  "aliases": [],
+  "factionId": null,
+  "description": "Hegemony raider hull type; 9th Raider Group standard.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "eqp_n075",
+  "type": "equipment",
+  "name": "Mark IV transponder beacon",
+  "aliases": [],
+  "factionId": null,
+  "description": "Standard Kestrel-registry transponder unit.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "eqp_n076",
+  "type": "equipment",
+  "name": "Reactor assembly consignment (Wyre)",
+  "aliases": [],
+  "factionId": null,
+  "description": "Convoy 7 cargo: six crated reactor assemblies.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ },
+ {
+  "id": "eqp_n077",
+  "type": "equipment",
+  "name": "Salvage tug rig",
+  "aliases": [],
+  "factionId": null,
+  "description": "Grapple-and-tow rig used at Gallows Reef.",
+  "attributes": {},
+  "confidence": 0.9,
+  "lon": null,
+  "lat": null,
+  "locationKind": null
+ }
+]

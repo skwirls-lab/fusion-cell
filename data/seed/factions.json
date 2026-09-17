@@ -1,0 +1,32 @@
+[
+ {
+  "id": "concord",
+  "name": "Concord Alliance",
+  "color": "#22d3ee",
+  "description": "The home side. Reach Fleet defends the western systems and runs the convoys."
+ },
+ {
+  "id": "hegemony",
+  "name": "Vantor Hegemony",
+  "color": "#ef4444",
+  "description": "Expansionist power east of Dusk Gate, probing the Reach with raider groups."
+ },
+ {
+  "id": "cartel",
+  "name": "Ashen Cartel",
+  "color": "#f59e0b",
+  "description": "Smuggling and arms network based in the southern reefs. Sells to anyone."
+ },
+ {
+  "id": "kestrel",
+  "name": "Free Port of Kestrel",
+  "color": "#a78bfa",
+  "description": "Neutral trade hub at the centre of the Reach. Heavy traffic, thin oversight."
+ },
+ {
+  "id": "unaffiliated",
+  "name": "Unaffiliated",
+  "color": "#9ca3af",
+  "description": "Merchants, pilgrims, salvagers, media."
+ }
+]

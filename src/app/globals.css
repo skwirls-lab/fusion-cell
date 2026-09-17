@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens (PRD §8). Faction colors are the only saturated hues in the
+ * app; everything else is navy/gray. Fonts are system stacks on purpose: the
+ * build runs offline, so nothing may fetch from Google Fonts.
+ */
+@theme {
+  --color-bg: #070b14;
+  --color-panel: #0e1522;
+  --color-panel-2: #131c2e;
+  --color-border: #1f2a3d;
+  --color-text: #d6dde8;
+  --color-muted: #7f8ca3;
+
+  --color-concord: #22d3ee;
+  --color-hegemony: #ef4444;
+  --color-cartel: #f59e0b;
+  --color-kestrel: #a78bfa;
+  --color-unaffiliated: #9ca3af;
+
+  --color-banner: #b45309;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-concord) 35%, transparent);
+  }
+}
+
+@layer components {
+  .panel {
+    background-color: var(--color-panel);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  /* Map pane only (PRD §8: no texture on reading surfaces). */
+  .starfield-bg {
+    background-color: var(--color-bg);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(214, 221, 232, 0.10) 1px, transparent 0),
+      linear-gradient(rgba(31, 42, 61, 0.35) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(31, 42, 61, 0.35) 1px, transparent 1px);
+    background-size: 24px 24px, 120px 120px, 120px 120px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

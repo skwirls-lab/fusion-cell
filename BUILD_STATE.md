@@ -1,53 +1,66 @@
 # Build State
 
-Last updated: 2026-09-17T15:30Z
-Current phase: 0 (Preflight)
-Model configured: deepseek-v4-flash-0731 (**unverified** — see Blocked)
-**Blocked: YES — network egress**
+Last updated: 2026-09-17T17:05Z
+Current phase: 4 (Views) — next up
+Model configured: deepseek-v4-flash-0731 (**unverified**, see B1)
+**Blocked: partially — B1 (network) blocks P0.2 smoke test, P1.6 deploy, and Phase 5 evals.
+Everything else proceeds against in-process PGlite.**
 
 ## BLOCKER — B1: session cannot reach OpenRouter or Supabase
+Unchanged. See KNOWN_ISSUES.md. Resolution needs the human: allowlist the hosts for
+this environment, or run the network-gated phases from a laptop.
 
-This Claude Code **web/remote** session routes all outbound traffic through a
-policy-enforcing egress proxy. That proxy returns `403` to `CONNECT` for both hosts
-this build depends on:
+## Phase 0 — Preflight  [PARTIAL]
+- [x] P0.1a Credentials written to .env.local (DB password `@` encoded as %40)   attempts: 1
+- [x] P0.1b .env.local gitignored                                              attempts: 1
+- [x] P0.1c scripts/check-env.ts                                               attempts: 2
+- [ ] P0.1d check-env.ts passes                                                BLOCKED B1
+- [ ] P0.2  scripts/smoke-model.ts — model tool-calling verified               BLOCKED B1 (script not yet written)
+- [x] P0.3  Ledgers + CLAUDE.md (Next 16 auto-generates CLAUDE.md → AGENTS.md)  attempts: 1
 
-```
-openrouter.ai:443                    -> 403 connect_rejected (policy denial)
-aqogfbjaepkkdvzukgxv.supabase.co:443 -> 403 connect_rejected (policy denial)
-TCP aws-0-us-east-2.pooler.supabase.com:5432 -> blocked (proxy is HTTPS-CONNECT only)
-```
+## Phase 1 — Foundation  [DONE except deploy]
+- [x] P1.1 Next 16 scaffold, `next build` green                                attempts: 3
+      note: duplicate viewport key in playwright.config; generic constraint in check-seed
+- [x] P1.2 Schema + migration — check-schema PASS (PGlite)                     attempts: 1
+- [x] P1.3 Password proxy — check-auth 6/6                                     attempts: 1 (subagent)
+- [x] P1.4 /api/health real DB round-trip                                      attempts: 1 (subagent)
+- [x] P1.5 App shell + banners — e2e/shell.spec.ts 1/1, zero console errors    attempts: 1 (subagent)
+- [ ] P1.6 Vercel deploy + env vars                                            BLOCKED B1 (human: Vercel auto-deploys on push; env vars must be set in the Vercel project — list in README)
 
-Verified via `curl http://127.0.0.1:39825/__agentproxy/status` (`recentRelayFailures`).
-The proxy README states policy denials must be reported, not routed around.
+## Phase 2 — Data  [DONE]
+- [x] P2.1 data/story-bible.md                                                 attempts: 1
+- [x] P2.2 scripts/generate-seed.ts → data/seed/*.json (deterministic, no LLM) attempts: 3
+      note: first pass under-dense (249 rels / 72 events); pattern-of-life pass added
+- [x] P2.3 scripts/seed-db.ts (wipe-and-load in one transaction)               attempts: 1
+- [x] P2.4 16 hand-written reports in scripts/seed/canon.ts                    attempts: 1
+- [x] P2 gate: check-seed PASS — 169 entities / 441 rels / 80 reports / 165 events;
+      LANTERN → exactly R-0019, R-0042; evidence path 5 hops; 0 forbidden-word leaks
 
-**Consequence:** every gate that touches the network cannot run *from this session*.
-This does not affect the application itself — Vercel functions and a local dev machine
-have no such policy.
+## Phase 3 — API  [DONE]
+- [x] P3.1–P3.6 all routes + queries.ts + Zod validation                       attempts: 1 (subagent)
+- [x] Unit: tests/unit/queries.test.ts 11/11, graph.test.ts 9/9
+- [x] P3 gate: check-api 20/20 against live dev server on seeded PGlite        attempts: 2
+      note: path default maxHops 4→6 (D5)
 
-**Resolution — needs the human. Either:**
-- (a) Add `openrouter.ai` and `*.supabase.co` to this environment's network allowlist
-      (environment network policy: https://code.claude.com/docs/en/claude-code-on-the-web),
-      then this session runs the whole build; or
-- (b) Run the build from a local Claude Code session (`Read BUILD.md and execute it`),
-      which has no egress policy.
+## Phase 4 — Views  [TODO]
+- [ ] P4.1 selection/filter store
+- [ ] P4.2 map (deck.gl over starfield)
+- [ ] P4.3 link chart (Cytoscape)
+- [ ] P4.4 cross-highlight map ↔ graph
+- [ ] P4.5 entity profile panel
+- [ ] P4.6 report feed, polling
+- [ ] P4.7 filter panel wired
 
-## Phase 0 — Preflight  [BLOCKED]
-- [x] P0.1a Credentials collected and written to .env.local   attempts: 1
-- [x] P0.1b .env.local confirmed gitignored                   attempts: 1
-- [x] P0.1c scripts/check-env.ts written                      attempts: 2
-      note: attempt 1 used `dotenv/config`, which loads .env not .env.local.
-            Fixed with scripts/_env.ts shared loader.
-- [ ] P0.1d check-env.ts PASSES                               BLOCKED by B1
-- [ ] P0.2  Model tool-calling smoke test passes              BLOCKED by B1
-- [x] P0.3  State/decision/issue ledgers created              attempts: 1
+## Phase 5 — AI analyst  [TODO; evals BLOCKED B1]
+- [ ] P5.1 provider module  ·  P5.2 tools  ·  P5.3 agent loop  ·  P5.4 chat route
+- [ ] P5.5 citation validation  ·  P5.6 highlight_in_ui  ·  P5.7 chat panel
+- [ ] scripts/smoke-model.ts, scripts/run-evals.ts (12 questions in tests/evals/questions.json)
 
-## Work that can proceed while B1 stands
-
-Everything not requiring live OpenRouter or Postgres. Roughly 70% of the build:
-schema + migration SQL, all API route handlers, graph algorithms + unit tests,
-the story bible, the 12 hand-written clue reports, deterministic seed generation,
-all UI components, the agent loop and tool implementations, Playwright specs,
-and the eval question set. Only the *execution* of network gates must wait.
+## Decisions deferred to the human
+- Where to run the network-gated gates (allowlist here vs laptop). See B1.
 
 ## Anti-thrash log
-- P0.1c attempt 2: root-caused to dotenv path, not a credential problem. No thrash.
+- P0.1c/2: dotenv path — root-caused, no thrash.
+- P2.2/2: density — measured, targeted fix.
+- P2 gate/2: case-sensitive keyword check + zero-participant IMINT events — both real.
+- Dev-server runs/4: exit 144 traced to kill commands, not the server (D8).
