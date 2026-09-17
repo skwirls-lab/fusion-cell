@@ -472,3 +472,132 @@ export async function existingReportNumbers(db: Db, numbers: string[]): Promise<
     .where(inArray(reports.reportNumber, numbers));
   return new Set(rows.map((r) => r.reportNumber));
 }
+
+// ---- briefs ------------------------------------------------------------------
+// Appended for Phase 6 (P6.5). Ids are brf_<8 hex>; every write bumps updated_at
+// and every content edit bumps version, so the list can show "v3 · 2 min ago".
+
+import { randomBytes } from 'node:crypto';
+import { briefs, type Brief as BriefRow } from './schema';
+
+export interface BriefSummary {
+  id: string;
+  title: string;
+  template: BriefRow['template'];
+  version: number;
+  subjectEntityId: string | null;
+  topic: string;
+  citations: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BriefFull extends BriefSummary {
+  content: unknown;
+  markdown: string;
+}
+
+export function serializeBriefSummary(row: BriefRow): BriefSummary {
+  return {
+    id: row.id, title: row.title, template: row.template, version: row.version,
+    subjectEntityId: row.subjectEntityId, topic: row.topic, citations: row.citations,
+    createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+export function serializeBrief(row: BriefRow): BriefFull {
+  return { ...serializeBriefSummary(row), content: row.content, markdown: row.markdown };
+}
+
+export const newBriefId = (): string => `brf_${randomBytes(4).toString('hex')}`;
+
+export interface CreateBriefInput {
+  title: string;
+  template: BriefRow['template'];
+  content: unknown;
+  markdown: string;
+  subjectEntityId?: string | null;
+  topic?: string;
+  citations?: string[];
+}
+
+export async function createBrief(db: Db, input: CreateBriefInput): Promise<BriefFull> {
+  const [row] = await db
+    .insert(briefs)
+    .values({
+      id: newBriefId(),
+      title: input.title,
+      template: input.template,
+      content: input.content,
+      markdown: input.markdown,
+      subjectEntityId: input.subjectEntityId ?? null,
+      topic: input.topic ?? '',
+      citations: input.citations ?? [],
+    })
+    .returning();
+  return serializeBrief(row);
+}
+
+export async function getBrief(db: Db, id: string): Promise<BriefFull | null> {
+  const row = await db.query.briefs.findFirst({ where: eq(briefs.id, id) });
+  return row ? serializeBrief(row) : null;
+}
+
+export async function listBriefs(db: Db, limit = 200): Promise<BriefSummary[]> {
+  const rows = await db.select().from(briefs).orderBy(desc(briefs.updatedAt), desc(briefs.id)).limit(limit);
+  return rows.map(serializeBriefSummary);
+}
+
+/** Title and/or markdown; each save is a new version. Null when the id is unknown. */
+export async function updateBrief(db: Db, id: string, patch: { title?: string; markdown?: string }): Promise<BriefFull | null> {
+  const [row] = await db
+    .update(briefs)
+    .set({
+      ...(patch.title !== undefined ? { title: patch.title } : {}),
+      ...(patch.markdown !== undefined ? { markdown: patch.markdown } : {}),
+      version: sql`${briefs.version} + 1`,
+      updatedAt: new Date(),
+    })
+    .where(eq(briefs.id, id))
+    .returning();
+  return row ? serializeBrief(row) : null;
+}
+
+export async function deleteBrief(db: Db, id: string): Promise<boolean> {
+  const rows = await db.delete(briefs).where(eq(briefs.id, id)).returning({ id: briefs.id });
+  return rows.length > 0;
+}
+
+// ---- admin (Phase 6a) ------------------------------------------------------------
+// Appended for the /admin page: one round trip for every table's row count.
+
+export interface AdminStatsRow {
+  counts: Record<'factions' | 'entities' | 'relationships' | 'reports' | 'events' | 'report_links' | 'event_entities' | 'ingest_jobs' | 'briefs', number>;
+  newestReportAt: string | null;
+  ingestByStatus: Record<string, number>;
+}
+
+export async function adminStats(db: Db): Promise<AdminStatsRow> {
+  const [countRows, [newest], statusRows] = await Promise.all([
+    db.execute<{ t: keyof AdminStatsRow['counts']; n: number }>(sql`
+      select 'factions' t, count(*)::int n from factions union all
+      select 'entities', count(*)::int from entities union all
+      select 'relationships', count(*)::int from relationships union all
+      select 'reports', count(*)::int from reports union all
+      select 'events', count(*)::int from events union all
+      select 'report_links', count(*)::int from report_links union all
+      select 'event_entities', count(*)::int from event_entities union all
+      select 'ingest_jobs', count(*)::int from ingest_jobs union all
+      select 'briefs', count(*)::int from briefs`).then((r) => r.rows),
+    db.select({ at: sql<Date | null>`max(${reports.reportedAt})` }).from(reports),
+    db.execute<{ status: string; n: number }>(sql`select status, count(*)::int n from ingest_jobs group by status`).then((r) => r.rows),
+  ]);
+  const counts = { factions: 0, entities: 0, relationships: 0, reports: 0, events: 0, report_links: 0, event_entities: 0, ingest_jobs: 0, briefs: 0 };
+  for (const r of countRows) counts[r.t] = r.n;
+  const at = newest?.at;
+  return {
+    counts,
+    newestReportAt: at ? new Date(at).toISOString() : null,
+    ingestByStatus: Object.fromEntries(statusRows.map((r) => [r.status, r.n])),
+  };
+}

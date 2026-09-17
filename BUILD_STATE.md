@@ -1,7 +1,7 @@
 # Build State
 
 Last updated: 2026-09-17T18:00Z
-Current phase: 6 (ingest + briefs) in progress via two subagents; model gates blocked
+Current phase: 6 built (review pending); model gates blocked
 Model configured: deepseek-v4-flash-0731 (**unverified**, see B1)
 **Blocked: partially — B1 (network) blocks P0.2 smoke test, P1.6 deploy, and Phase 5 evals.
 Everything else proceeds against in-process PGlite.**
@@ -76,13 +76,18 @@ this environment, or run the network-gated phases from a laptop.
 - P2 gate/2: case-sensitive keyword check + zero-participant IMINT events — both real.
 - Dev-server runs/4: exit 144 traced to kill commands, not the server (D8).
 
-## Phase 6 — Ingest and briefs  [IN_PROGRESS]
+## Phase 6 — Ingest and briefs  [BUILT; review pending]
 - [x] Prep: `briefs` table + migration 0002, check-schema updated, reseed truncates briefs, nav → real links
-- [ ] P6.1 POST /api/ingest extraction (single structured call, Zod, retry-once)     subagent
-- [ ] P6.2 entity matching (exact/alias → initials-aware → similarity)                subagent
-- [ ] P6.3 review UI: link / create / discard per extraction                          subagent
-- [ ] P6.4 commit in one transaction; appears on map/graph                            subagent
-- [ ] P6.5 briefs: draft via runAgent + structuring call; editor; versions; print     subagent
-- [ ] /reports, /entities list pages; /admin reseed + stats                           subagent
+- [x] P6.1 POST /api/ingest: one structured call, Zod, retry-once, typed ExtractionError   unit (ScriptedProvider)
+- [x] P6.2 matching: exact/alias → initials-aware token overlap → trigram; link/create/discard   unit: "I. Varro"→Ilsa, Ansel never matches Ilsa
+- [x] P6.3 review UI with per-row decisions, ?job= resume, file upload                 e2e
+- [x] P6.4 one-transaction commit; R-0081 appears in feed, profile, map (+1 marker), graph (+1 node)   e2e
+- [x] P6.5 briefs: draftBrief (runAgent evidence → structuring call → deterministic markdown), citation stripping, editor, versions, print HTML with banners   unit 11, e2e 6
+- [x] /reports (sort/filter/FTS/pagination), /entities, /admin (reseed + stats)        e2e
+- [x] Gates: tsc; vitest 83/83; playwright 21/21 (zero console errors); next build
+- note: each model-facing flow has a dev-only `manual` seam (404 in production) so the human-review
+  half is e2e-tested honestly; real-model extraction/drafting remain unverified (B1).
+- follow-up: ingested reports get reported_at = now, which pushes the scenario clock past day 30
+  until reseed. Clamp to the scenario window or let the analyst set it.
 - note: real-model extraction/drafting cannot be exercised here (B1); each flow gets a
   dev-only `manual` seam (404 in production) so review/commit/edit UIs are e2e-tested honestly.

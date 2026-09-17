@@ -13,6 +13,7 @@ import { useEntityProfile } from '@/lib/client/api';
 import type { AgentEvent } from '@/lib/ai/agent';
 import { DEFAULT_MAX_STEPS } from '@/lib/ai/limits';
 import { parseSseChunk } from './sse';
+import { DraftBriefButton } from '@/components/brief/DraftBriefButton';
 
 // ---- local state shapes ------------------------------------------------------------
 
@@ -168,6 +169,7 @@ function AssistantBubble({ turn }: { turn: AssistantTurn }) {
               {turn.citations.invalid.length > 0 && <span className="text-hegemony"> · {turn.citations.invalid.length} invalid</span>}
             </span>
           )}
+          {turn.content && !turn.error && turn.citations && <DraftBriefButton text={turn.content} citations={turn.citations.valid} />}
         </div>
       )}
     </div>

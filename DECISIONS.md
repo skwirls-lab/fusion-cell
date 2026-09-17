@@ -88,3 +88,31 @@ before the phase commit, as §4 requires. Accepted as-is, deliberately:
 every substring criterion. `mustMentionAny` now needs Ilsa specifically and
 `mustNotClaim` lists the denial phrasings. Substring scoring is still crude; the
 right fix once a real model runs is an LLM-judged rubric on the Bottom line section.
+
+**D16 — Briefs use a markdown textarea + react-markdown preview, not Tiptap.** The PRD
+asks for a rich-text editor; Tiptap is not installed and cannot be in this build (no
+network). Markdown is what the model drafts and what the print route renders, so the
+analyst edits the export format directly. `[R-xxxx]` chips in the preview open the
+report reader. Swap in a rich-text editor later by round-tripping the same markdown.
+
+**D17 — A brief is "run the analyst, then structure the answer".** `draftBrief` reuses
+`runAgent` verbatim for evidence (or a hand-over answer from the chat panel), then makes
+one no-tools JSON call validated by Zod with one retry. The citation rule is the
+analyst's: a number may appear only if a tool returned it in that run (read from the
+tool messages in the transcript) and it exists; everything else is stripped and listed
+in `strippedCitations`. Step A's own invalid citations are removed from the analysis
+before the structuring call so a fabricated number cannot be laundered into the brief.
+
+**D18 — Print export renders markdown to HTML with a tiny in-house converter.**
+`react-dom/server` inside an App Router route handler resolves to the react-server
+stub, so `renderToStaticMarkup` is not an option there. The converter covers exactly
+the subset `renderBriefMarkdown` emits (plus what an analyst types: headings, lists,
+bold/em/code) and escapes everything first. The stylesheet (`src/app/print.css`) is
+inlined by reading the file at request time; a compact fallback with the same
+banner/@page rules is embedded in case a serverless bundle omits the file.
+
+**D19 — `POST /api/briefs/manual` is a dev-only seam (404 in production).** The real
+model is unreachable here (B1), so the e2e spec inserts a brief row through the seam
+and verifies list, editor, versioning, preview chips → reader, print HTML and delete.
+It skips generation entirely; the pipeline is verified by tests/unit/brief with a
+scripted model over the real seed. Real-model drafting has not been exercised.

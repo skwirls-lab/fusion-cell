@@ -187,3 +187,109 @@ export function fetchNeighbors(id: string, depth = 1): Promise<Graph> {
 export function fetchPath(from: string, to: string, maxHops?: number): Promise<PathResult> {
   return apiGet<PathResult>('/api/graph/path', { from, to, maxHops }, 'path');
 }
+
+// ---- briefs (Phase 6) ------------------------------------------------------------
+// Appended for P6.5. Types come from the query layer (type-only import: erased at build).
+
+import type { BriefFull, BriefSummary } from '@/lib/db/queries';
+export type { BriefFull, BriefSummary };
+
+export const BRIEFS_KEY = ['briefs'] as const;
+
+/** JSON request with a body; same error shape as apiGet. */
+export async function apiSend<T>(method: 'POST' | 'PATCH' | 'DELETE', path: string, body?: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method,
+    credentials: 'same-origin',
+    headers: { accept: 'application/json', ...(body !== undefined ? { 'content-type': 'application/json' } : {}) },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  let data: unknown = null;
+  try { data = await res.json(); } catch { /* 204 or non-JSON */ }
+  if (res.status === 401 && typeof window !== 'undefined') {
+    window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+  }
+  if (!res.ok) throw new ApiRequestError(res.status, path, data);
+  return data as T;
+}
+
+export function useBriefs() {
+  return useQuery({
+    queryKey: BRIEFS_KEY,
+    queryFn: () => apiGet<{ briefs: BriefSummary[] }>('/api/briefs').then((r) => r.briefs),
+  });
+}
+
+export function useBrief(id: string | null) {
+  return useQuery({
+    queryKey: ['brief', id],
+    queryFn: () => apiGet<BriefFull>(`/api/briefs/${encodeURIComponent(id!)}`),
+    enabled: id !== null,
+  });
+}
+
+export function patchBrief(id: string, patch: { title?: string; markdown?: string }): Promise<BriefFull> {
+  return apiSend<BriefFull>('PATCH', `/api/briefs/${encodeURIComponent(id)}`, patch);
+}
+
+export function removeBrief(id: string): Promise<{ ok: true }> {
+  return apiSend<{ ok: true }>('DELETE', `/api/briefs/${encodeURIComponent(id)}`);
+}
+
+// ---- ingest + admin (Phase 6a) ------------------------------------------------------
+// Appended for P6.1–P6.4 and the list/admin pages. Contract types are type-only imports.
+
+import type { AdminStats, CommitResult, IngestDecisions, IngestJobOut, IngestJobSummaryOut, ReseedResult } from '@/lib/ingest/types';
+export type { AdminStats, CommitResult, IngestDecisions, IngestJobOut, IngestJobSummaryOut, ReseedResult };
+
+export const INGEST_JOBS_KEY = ['ingest-jobs'] as const;
+export const ADMIN_STATS_KEY = ['admin-stats'] as const;
+
+export function useIngestJob(id: string | null) {
+  return useQuery({
+    queryKey: ['ingest-job', id],
+    queryFn: () => apiGet<IngestJobOut>(`/api/ingest/${encodeURIComponent(id!)}`),
+    enabled: id !== null,
+  });
+}
+
+export function useIngestJobs() {
+  return useQuery({
+    queryKey: INGEST_JOBS_KEY,
+    queryFn: () => apiGet<{ jobs: IngestJobSummaryOut[] }>('/api/ingest').then((r) => r.jobs),
+  });
+}
+
+export function submitIngest(body: { rawText: string; reportType: string }): Promise<IngestJobOut> {
+  return apiSend<IngestJobOut>('POST', '/api/ingest', body);
+}
+
+export function commitIngestJob(id: string, decisions: IngestDecisions): Promise<CommitResult> {
+  return apiSend<CommitResult>('POST', `/api/ingest/${encodeURIComponent(id)}/commit`, { decisions });
+}
+
+export function discardIngestJob(id: string): Promise<IngestJobOut> {
+  return apiSend<IngestJobOut>('POST', `/api/ingest/${encodeURIComponent(id)}/discard`);
+}
+
+export function useAdminStats() {
+  return useQuery({
+    queryKey: ADMIN_STATS_KEY,
+    queryFn: () => apiGet<AdminStats>('/api/admin/stats'),
+    staleTime: 0,
+  });
+}
+
+export function reseedDatabase(): Promise<ReseedResult> {
+  return apiSend<ReseedResult>('POST', '/api/admin/reseed');
+}
+
+export interface EntityListOptions { q?: string; type?: string[]; faction?: string[]; limit?: number }
+
+/** Filtered entity list for the /entities page (useEntities only takes a search term). */
+export function useEntityList(opts: EntityListOptions = {}) {
+  return useQuery({
+    queryKey: ['entity-list', opts],
+    queryFn: () => apiGet<{ entities: Entity[] }>('/api/entities', { ...opts }, 'entities').then((r) => r.entities),
+  });
+}
