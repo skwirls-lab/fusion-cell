@@ -1,0 +1,6 @@
+/* New rows glow briefly on arrival (PRD §8). The global reduced-motion rule caps the duration. */
+@keyframes feedGlow {
+  0%   { background-color: color-mix(in srgb, var(--color-concord) 28%, transparent); box-shadow: inset 2px 0 0 var(--color-concord); }
+  100% { background-color: transparent; box-shadow: inset 2px 0 0 transparent; }
+}
+.feedNew { animation: feedGlow 2s ease-out; }

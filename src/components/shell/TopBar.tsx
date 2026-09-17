@@ -3,6 +3,26 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BellIcon, UserIcon } from './icons';
+import GlobalSearch from '@/components/search';
+import { useReports } from '@/lib/client/api';
+import { scenarioDay } from '@/lib/client/format';
+
+/** "SCENARIO DAY N": the newest report's date relative to 2026-08-01 (day 1). */
+function ScenarioClock() {
+  const latest = useReports({ limit: 1, refetchInterval: 30_000 });
+  const newest = latest.data?.reports[0]?.reportedAt;
+  const day = newest ? scenarioDay(newest) : null;
+  return (
+    <span
+      className="font-mono text-[11px] tracking-wider text-muted"
+      title={newest ? `Newest report: ${newest}` : 'Waiting for the first report'}
+      data-testid="scenario-clock"
+      data-day={day ?? undefined}
+    >
+      SCENARIO DAY {day ?? '—'}
+    </span>
+  );
+}
 
 export function TopBar() {
   const router = useRouter();
@@ -36,24 +56,11 @@ export function TopBar() {
       </div>
 
       <div className="flex flex-1 justify-center">
-        <input
-          id="global-search"
-          type="search"
-          autoComplete="off"
-          placeholder="Search entities, reports… ( / )"
-          aria-label="Global search"
-          className="h-7 w-full max-w-[520px] rounded border border-border bg-bg px-2.5 text-[12px] text-text placeholder:text-muted focus:border-concord/60 focus:outline-none"
-        />
+        <GlobalSearch />
       </div>
 
       <div className="flex items-center gap-3">
-        <span
-          className="font-mono text-[11px] tracking-wider text-muted"
-          title="Scenario clock (wired in a later phase)"
-          data-testid="scenario-clock"
-        >
-          SCENARIO DAY —
-        </span>
+        <ScenarioClock />
 
         <button
           type="button"

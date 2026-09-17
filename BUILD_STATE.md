@@ -1,7 +1,7 @@
 # Build State
 
-Last updated: 2026-09-17T17:40Z
-Current phase: 4 (Views) in progress; 5 (AI) built, model gates blocked
+Last updated: 2026-09-17T18:00Z
+Current phase: 4 and 5 built and reviewed; Phase 6 (ingest/briefs) next; model gates blocked
 Model configured: deepseek-v4-flash-0731 (**unverified**, see B1)
 **Blocked: partially — B1 (network) blocks P0.2 smoke test, P1.6 deploy, and Phase 5 evals.
 Everything else proceeds against in-process PGlite.**
@@ -42,14 +42,16 @@ this environment, or run the network-gated phases from a laptop.
 - [x] P3 gate: check-api 20/20 against live dev server on seeded PGlite        attempts: 2
       note: path default maxHops 4→6 (D5)
 
-## Phase 4 — Views  [TODO]
-- [ ] P4.1 selection/filter store
-- [ ] P4.2 map (deck.gl over starfield)
-- [ ] P4.3 link chart (Cytoscape)
-- [ ] P4.4 cross-highlight map ↔ graph
-- [ ] P4.5 entity profile panel
-- [ ] P4.6 report feed, polling
-- [ ] P4.7 filter panel wired
+## Phase 4 — Views  [DONE]
+- [x] P4.1 selection/filter/highlight store + client select helpers           unit: 11 tests
+- [x] P4.2 map: deck.gl scatter/line/text over starfield, real picking         e2e: ≥40 markers (203)
+- [x] P4.3 link chart: Cytoscape cose, faction colours, type shapes            e2e: ≥20 nodes (116, locations hidden by default)
+- [x] P4.4 cross-highlight both directions via shared adjacency                e2e: canvas click on Kestrel → ≥2 lit incl. Ilsa Varro; chart click → map rings
+- [x] P4.5 entity profile: attributes, grouped connections + report chips, timeline, reports
+- [x] P4.6 feed, 3s polling, newest-first ASSERTED, report reader with inline entity marks
+- [x] P4.7 filters wired (faction filter drops 203→58 in e2e); global search; shortcuts; URL sync
+- [x] Review round 1 (§4): H1 H2 H3 M1 M3 M4 L2 L3 L5 L6 fixed; M5 L1 L7 accepted (D14)
+- [x] P4 gate: e2e/views.spec.ts 8/8 + shell 1/1, zero console errors         attempts: 2
 
 ## Phase 5 — AI analyst  [BUILT; model gates BLOCKED B1]
 - [x] P5.1 provider (OpenRouter + ScriptedProvider)                            attempts: 1 (subagent)

@@ -284,7 +284,7 @@ export async function listReports(
       .select()
       .from(reports)
       .where(cond)
-      .orderBy(...(q.q ? [desc(ftsRank(q.q)), desc(reports.reportedAt)] : [desc(reports.reportedAt)]))
+      .orderBy(...(q.q ? [desc(ftsRank(q.q)), desc(reports.reportedAt), desc(reports.reportNumber)] : [desc(reports.reportedAt), desc(reports.reportNumber)]))
       .limit(q.limit)
       .offset(q.offset),
     db.select({ total: count() }).from(reports).where(cond),
