@@ -1,0 +1,20 @@
+{
+  "name": "fusion-cell",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check:env": "tsx scripts/check-env.ts",
+    "smoke:model": "tsx scripts/smoke-model.ts"
+  },
+  "dependencies": {
+    "@types/node": "^22.20.3",
+    "@types/pg": "^8.23.1",
+    "dotenv": "^17.4.2",
+    "openai": "^7.17.0",
+    "pg": "^8.23.0",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
+    "zod": "^4.6.5"
+  }
+}
