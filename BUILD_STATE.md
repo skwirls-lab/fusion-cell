@@ -1,7 +1,7 @@
 # Build State
 
-Last updated: 2026-09-17T17:05Z
-Current phase: 4 (Views) — next up
+Last updated: 2026-09-17T17:40Z
+Current phase: 4 (Views) in progress; 5 (AI) built, model gates blocked
 Model configured: deepseek-v4-flash-0731 (**unverified**, see B1)
 **Blocked: partially — B1 (network) blocks P0.2 smoke test, P1.6 deploy, and Phase 5 evals.
 Everything else proceeds against in-process PGlite.**
@@ -51,10 +51,19 @@ this environment, or run the network-gated phases from a laptop.
 - [ ] P4.6 report feed, polling
 - [ ] P4.7 filter panel wired
 
-## Phase 5 — AI analyst  [TODO; evals BLOCKED B1]
-- [ ] P5.1 provider module  ·  P5.2 tools  ·  P5.3 agent loop  ·  P5.4 chat route
-- [ ] P5.5 citation validation  ·  P5.6 highlight_in_ui  ·  P5.7 chat panel
-- [ ] scripts/smoke-model.ts, scripts/run-evals.ts (12 questions in tests/evals/questions.json)
+## Phase 5 — AI analyst  [BUILT; model gates BLOCKED B1]
+- [x] P5.1 provider (OpenRouter + ScriptedProvider)                            attempts: 1 (subagent)
+- [x] P5.2 nine tools over queries.ts, Zod→JSON schema, seen-report tracking   (D9)
+- [x] P5.3 agent loop, 8-step cap, forced final answer, audit transcript       (D10, D11)
+- [x] P5.4 POST /api/analyst/chat SSE — transport verified live (error event streams as well-formed SSE)
+- [x] P5.5 citation validation: seen-set ∩ exists-in-DB; invalid flagged        unit-tested
+- [x] P5.6 highlight_in_ui → `ui` event → store.aiHighlights                   unit-tested
+- [x] P5.7 AnalystPanel: trace, chips → reader, invalid chips, prefill, Stop    browser-checked with canned SSE
+- [x] Unit: tests/unit/ai 19/19 over the REAL seed in in-memory PGlite (50/50 total)
+- [x] scripts/smoke-model.ts written — exits 3 here (network)                  BLOCKED B1
+- [x] scripts/run-evals.ts written — exits 3 here (network)                    BLOCKED B1
+- [ ] P5 GATE: run-evals ≥9/12 with LANTERN passing                            BLOCKED B1 — **the real model has never been called**
+- [ ] e2e for P5.4/5.6/5.7 with a real model (testids are in place)            BLOCKED B1
 
 ## Decisions deferred to the human
 - Where to run the network-gated gates (allowlist here vs laptop). See B1.
