@@ -25,6 +25,7 @@ offline; the analyst needs `OPENROUTER_API_KEY`.
 
 ```bash
 npm run smoke:model     # tool-calling / streaming / JSON checks against OpenRouter
+node scripts/smoke-model-raw.mjs   # same five checks with zero dependencies (no node_modules needed)
 npm run evals           # 12 scenario questions incl. "Who is LANTERN?"; needs ≥ 9/12
 ```
 
@@ -53,7 +54,7 @@ npm run test:e2e        # Playwright: shell + views
    |---|---|
    | `DATABASE_URL` | Supabase session-pooler URL |
    | `OPENROUTER_API_KEY` | your key (set a credit limit on it) |
-   | `OPENROUTER_MODEL` | `deepseek-v4-flash-0731` (or whatever `smoke:model` picked) |
+   | `OPENROUTER_MODEL` | `deepseek/deepseek-v4-flash-0731` (vendor prefix required; or whatever `smoke:model` picked) |
    | `APP_PASSWORD` | the shared password |
    | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | from Supabase → Settings → API (unused by the app today; harmless) |
 

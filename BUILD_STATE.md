@@ -1,21 +1,40 @@
 # Build State
 
-Last updated: 2026-09-17T19:20Z
-Current phase: ALL PHASES BUILT. Definition of Done met except the model-dependent gates (B1).
-Model configured: deepseek-v4-flash-0731 (**unverified**, see B1)
-**Blocked: only B1 (network) — P0.2 smoke test, P1.6 deploy, Phase 5 evals, and real-model
-extraction/drafting. Every other gate is green on in-process PGlite.**
+Last updated: 2026-09-17T19:45Z
+Current phase: ALL PHASES BUILT. Definition of Done met except the model-dependent gates.
+Model configured: `deepseek-v4-flash-0731` in the session env — **wrong id**: OpenRouter lists it
+as `deepseek/deepseek-v4-flash-0731` (vendor prefix). Still **unverified** (B4).
+**Blocked: B3 + B4 (this session) — P0.2 smoke test, Phase 5 evals, real-model extraction/
+drafting, and every `npm`-driven gate. Every other gate was green on PGlite in the previous session.**
 
-## BLOCKER — B1: session cannot reach OpenRouter or Supabase
-Unchanged. See KNOWN_ISSUES.md. Resolution needs the human: allowlist the hosts for
-this environment, or run the network-gated phases from a laptop.
+## BLOCKERS (session of 2026-09-17T19:30Z — fresh container)
+- **B1 — partly lifted.** `openrouter.ai` is now reachable (GET /models → 200, 445 models).
+  The Supabase session pooler (`aws-0-us-east-2.pooler.supabase.com:5432`) is still
+  unreachable: the egress proxy carries HTTPS only, and Postgres is raw TCP. PGlite remains
+  the only database here.
+- **B3 — `registry.npmjs.org` is denied by this session's egress policy** (`x-deny-reason:
+  host_not_allowed`, direct and via proxy; yarnpkg, npmmirror, jsdelivr, unpkg, esm.sh all
+  denied too). `npm ci` cannot run; the npm cache holds 8 of the 417 lockfile tarballs; no
+  copy of any dependency exists on disk. **Nothing in `package.json` scripts can run** — no
+  tsx, vitest, playwright, next. The previous session evidently had registry access.
+- **B4 — `OPENROUTER_API_KEY` in the session environment is a placeholder**: 12 bytes,
+  `sk-or-v1-` followed by a literal Unicode ellipsis (U+2026). OpenRouter's `/auth/key`
+  answers 401 "Malformed authentication credential … stray unicode". It was pasted from a
+  redacted display. `check-env.ts` and `smoke-model-raw.mjs` now fail loudly on this.
+Resolution needs the human: (1) paste the full ASCII key into the environment, (2) set
+`OPENROUTER_MODEL=deepseek/deepseek-v4-flash-0731`, (3) allowlist `registry.npmjs.org` for
+this environment — or run the gates from a laptop.
 
 ## Phase 0 — Preflight  [PARTIAL]
 - [x] P0.1a Credentials written to .env.local (DB password `@` encoded as %40)   attempts: 1
 - [x] P0.1b .env.local gitignored                                              attempts: 1
 - [x] P0.1c scripts/check-env.ts                                               attempts: 2
-- [ ] P0.1d check-env.ts passes                                                BLOCKED B1
-- [ ] P0.2  scripts/smoke-model.ts — model tool-calling verified               BLOCKED B1 (script not yet written)
+- [ ] P0.1d check-env.ts passes                                                BLOCKED B1 (DB TCP) + B3 (no tsx) + B4 (key)
+      note: now also rejects non-ASCII/short keys and unprefixed model ids (the exact failures seen)
+- [ ] P0.2  scripts/smoke-model.ts — model tool-calling verified               BLOCKED B3 (no node_modules) + B4 (key)     attempts: 1
+      note: `scripts/smoke-model-raw.mjs` (D26) runs the same 5 checks with zero deps; ran here →
+      exit 2 on the placeholder key. With a fake ASCII key the request reaches OpenRouter (401),
+      so the transport works; only the credential is missing.
 - [x] P0.3  Ledgers + CLAUDE.md (Next 16 auto-generates CLAUDE.md → AGENTS.md)  attempts: 1
 
 ## Phase 1 — Foundation  [DONE except deploy]
@@ -62,13 +81,14 @@ this environment, or run the network-gated phases from a laptop.
 - [x] P5.6 highlight_in_ui → `ui` event → store.aiHighlights                   unit-tested
 - [x] P5.7 AnalystPanel: trace, chips → reader, invalid chips, prefill, Stop    browser-checked with canned SSE
 - [x] Unit: tests/unit/ai 19/19 over the REAL seed in in-memory PGlite (50/50 total)
-- [x] scripts/smoke-model.ts written — exits 3 here (network)                  BLOCKED B1
-- [x] scripts/run-evals.ts written — exits 3 here (network)                    BLOCKED B1
-- [ ] P5 GATE: run-evals ≥9/12 with LANTERN passing                            BLOCKED B1 — **the real model has never been called**
-- [ ] e2e for P5.4/5.6/5.7 with a real model (testids are in place)            BLOCKED B1
+- [x] scripts/smoke-model.ts written — candidate list now tries the vendor-prefixed id first   BLOCKED B3 + B4
+- [x] scripts/run-evals.ts written                                             BLOCKED B3 + B4
+- [ ] P5 GATE: run-evals ≥9/12 with LANTERN passing                            BLOCKED B3 + B4 — **the real model has never been called**
+- [ ] e2e for P5.4/5.6/5.7 with a real model (testids are in place)            BLOCKED B3 + B4
 
 ## Decisions deferred to the human
-- Where to run the network-gated gates (allowlist here vs laptop). See B1.
+- Where to run the network-gated gates (allowlist here vs laptop). See B1/B3.
+- Supply a real `OPENROUTER_API_KEY` and the prefixed `OPENROUTER_MODEL` (B4).
 
 ## Anti-thrash log
 - P0.1c/2: dotenv path — root-caused, no thrash.
@@ -104,8 +124,8 @@ this environment, or run the network-gated phases from a laptop.
 - [x] `npx vitest run` — 98/98
 - [x] `npx playwright test` — 26/26, zero console errors across all specs
 - [x] `check-schema` PASS · `check-seed` PASS · `check-auth` 6/6 · `check-api` 20/20 (live dev server)
-- [ ] `run-evals` ≥9/12 with LANTERN passing — **BLOCKED B1** (exits 3: network). First thing to run wherever the model is reachable.
-- [ ] `smoke-model` — **BLOCKED B1** (exits 3)
+- [ ] `run-evals` ≥9/12 with LANTERN passing — **BLOCKED B3 + B4**. First thing to run wherever deps install and a real key exists.
+- [ ] `smoke-model` — **BLOCKED B3 + B4** (raw twin ran: key is a placeholder)
 - [ ] Deployed URL serves the app — **needs the human**: Vercel env vars (README), Supabase migrate + seed once
 - [x] Every UI value traces to a database row — verified by two fresh-context reviews (rounds 1 and 2)
 - [x] Ledgers current
@@ -114,8 +134,12 @@ this environment, or run the network-gated phases from a laptop.
       062ec3a (redacted since). **Rotate it.**
 
 ## Resume instructions for a session with network access
-1. `npm run check:env` — proves the keys and DB are reachable.
+0. `node scripts/smoke-model-raw.mjs` — needs nothing installed; proves the key and the model
+   before spending time on anything else. Exit 2 with a "malformed key" line means B4 still holds.
+1. `npm ci && npm run check:env` — proves the keys and DB are reachable (B3 must be lifted).
 2. `npm run smoke:model` — picks the first model that can drive a tool loop; writes OPENROUTER_MODEL.
+   Note: an `OPENROUTER_MODEL` already set in the process environment overrides `.env.local`
+   (dotenv and Next.js both keep existing vars) — fix it at the source, not only in the file.
 3. `DB_DRIVER=pglite npm run seed:load && DB_DRIVER=pglite npm run evals` — the LANTERN gate.
    If it fails, the order of suspicion is in BUILD.md Phase 5: search tool surfacing → step cap → seed density.
 4. Production DB once: `npm run migrate && npm run seed:load` with DATABASE_URL set.

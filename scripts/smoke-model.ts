@@ -11,15 +11,18 @@ import fs from 'node:fs';
 import { z } from 'zod';
 import { OpenRouterProvider, isNetworkBlocked, type ChatMessage, type ToolSpec } from '../src/lib/ai/provider';
 
-// The human's model first (BUILD.md §1 / DECISIONS D4). The fallbacks are
-// best-guess OpenRouter ids, progressively more capable; if one is not listed
-// on the account, OpenRouter answers 404 and the loop moves on.
-const MODEL_CANDIDATES = [
-  process.env.OPENROUTER_MODEL ?? 'deepseek-v4-flash-0731',
-  'deepseek/deepseek-chat',
+// The human's model first (BUILD.md §1 / DECISIONS D4), then the same id with
+// its vendor prefix — OpenRouter lists it as deepseek/deepseek-v4-flash-0731
+// (D26) — then progressively more capable fallbacks, all confirmed present in
+// GET /models on 2026-09-17. An unlisted id answers 404 and the loop moves on.
+const configured = process.env.OPENROUTER_MODEL ?? 'deepseek/deepseek-v4-flash-0731';
+const MODEL_CANDIDATES = [...new Set([
+  configured,
+  configured.includes('/') ? configured : `deepseek/${configured}`,
+  'deepseek/deepseek-v4-pro',
   'anthropic/claude-sonnet-4',
   'openai/gpt-4o-mini',
-];
+])];
 
 const ENV_FILE = '.env.local';
 const NUMBERS: Record<string, number> = { alpha: 17, beta: 25 };
