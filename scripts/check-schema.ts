@@ -13,6 +13,7 @@ const EXPECT: Record<string, string[]> = {
   report_links: ['report_id', 'object_type', 'object_id', 'excerpt'],
   event_entities: ['event_id', 'entity_id', 'role'],
   ingest_jobs: ['id', 'raw_text', 'report_type', 'status', 'extraction', 'report_id', 'created_at'],
+  briefs: ['id', 'title', 'template', 'content', 'markdown', 'version', 'subject_entity_id', 'topic', 'citations', 'created_at', 'updated_at'],
 };
 
 const h = await createDb();

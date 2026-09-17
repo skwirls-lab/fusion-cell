@@ -1,7 +1,7 @@
 # Build State
 
 Last updated: 2026-09-17T18:00Z
-Current phase: 4 and 5 built and reviewed; Phase 6 (ingest/briefs) next; model gates blocked
+Current phase: 6 (ingest + briefs) in progress via two subagents; model gates blocked
 Model configured: deepseek-v4-flash-0731 (**unverified**, see B1)
 **Blocked: partially — B1 (network) blocks P0.2 smoke test, P1.6 deploy, and Phase 5 evals.
 Everything else proceeds against in-process PGlite.**
@@ -75,3 +75,14 @@ this environment, or run the network-gated phases from a laptop.
 - P2.2/2: density — measured, targeted fix.
 - P2 gate/2: case-sensitive keyword check + zero-participant IMINT events — both real.
 - Dev-server runs/4: exit 144 traced to kill commands, not the server (D8).
+
+## Phase 6 — Ingest and briefs  [IN_PROGRESS]
+- [x] Prep: `briefs` table + migration 0002, check-schema updated, reseed truncates briefs, nav → real links
+- [ ] P6.1 POST /api/ingest extraction (single structured call, Zod, retry-once)     subagent
+- [ ] P6.2 entity matching (exact/alias → initials-aware → similarity)                subagent
+- [ ] P6.3 review UI: link / create / discard per extraction                          subagent
+- [ ] P6.4 commit in one transaction; appears on map/graph                            subagent
+- [ ] P6.5 briefs: draft via runAgent + structuring call; editor; versions; print     subagent
+- [ ] /reports, /entities list pages; /admin reseed + stats                           subagent
+- note: real-model extraction/drafting cannot be exercised here (B1); each flow gets a
+  dev-only `manual` seam (404 in production) so review/commit/edit UIs are e2e-tested honestly.

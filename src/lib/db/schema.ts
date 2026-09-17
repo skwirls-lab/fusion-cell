@@ -135,3 +135,23 @@ export type Event = typeof events.$inferSelect;
 export type ReportLink = typeof reportLinks.$inferSelect;
 export type EventEntity = typeof eventEntities.$inferSelect;
 export type IngestJob = typeof ingestJobs.$inferSelect;
+
+export const BRIEF_TEMPLATES = ['daily_summary', 'threat_assessment', 'entity_profile'] as const;
+
+export const briefs = pgTable('briefs', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  template: text('template', { enum: BRIEF_TEMPLATES }).notNull(),
+  /** Structured draft the model produced (BLUF, judgments, evidence, gaps). */
+  content: jsonb('content').$type<unknown>().notNull(),
+  /** Analyst-editable rendering; what gets exported. */
+  markdown: text('markdown').notNull(),
+  version: integer('version').notNull().default(1),
+  subjectEntityId: text('subject_entity_id').references(() => entities.id),
+  topic: text('topic').notNull().default(''),
+  /** Report numbers cited by the draft, validated the same way analyst answers are. */
+  citations: text('citations').array().notNull().default(sql`'{}'::text[]`),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+export type Brief = typeof briefs.$inferSelect;

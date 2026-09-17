@@ -32,7 +32,7 @@ export async function loadSeed(h: DbHandle, dir = path.resolve('data/seed')): Pr
   const eventEntities = load<typeof schema.eventEntities.$inferInsert>('event_entities');
 
   await h.db.transaction(async (tx) => {
-    await tx.execute(sql`truncate event_entities, report_links, events, reports, relationships, entities, factions, ingest_jobs cascade`);
+    await tx.execute(sql`truncate event_entities, report_links, events, reports, relationships, entities, factions, ingest_jobs, briefs cascade`);
     const chunk = async <T,>(table: Parameters<typeof tx.insert>[0], rows: T[], size = 150) => {
       for (let i = 0; i < rows.length; i += size) await tx.insert(table).values(rows.slice(i, i + size) as never);
     };
