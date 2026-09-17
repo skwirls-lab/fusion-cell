@@ -84,10 +84,19 @@ export function ReportsTable() {
         {!serverPaged && total > ALL_CAP && <span className="text-[10px] text-cartel">Sorting the newest {ALL_CAP} of {total}.</span>}
       </div>
 
-      {query.isPending && <Skeleton rows={12} />}
-      {query.error && <ErrorState error={query.error} retry={() => void query.refetch()} />}
-      {query.data && rows.length === 0 && <EmptyState>No reports match{q ? ` “${q}”` : ''}{types.length ? ` in ${types.join(', ')}` : ''}.</EmptyState>}
-      {query.data && rows.length > 0 && (
+      {query.isPending && <Skeleton rows={12} testId="reports-loading" />}
+      {query.error && <ErrorState error={query.error} retry={() => void query.refetch()} retrying={query.isFetching} testId="reports-error" />}
+      {!query.error && query.data && rows.length === 0 && (
+        <EmptyState
+          testId="reports-empty"
+          action={q || input || types.length ? { label: 'Clear search and filters', onClick: () => { setInput(''); setQ(''); setTypes([]); }, testId: 'reports-clear' } : undefined}
+        >
+          {q || types.length
+            ? <>No reports match{q ? ` “${q}”` : ''}{types.length ? ` in ${types.join(', ')}` : ''}.</>
+            : <>No reports in the database yet. Ingest one from the Ingest page, or reseed the scenario from Admin.</>}
+        </EmptyState>
+      )}
+      {!query.error && query.data && rows.length > 0 && (
         <table className="w-full border-collapse text-[11px]" data-testid="reports-table" data-row-count={rows.length}>
           <thead>
             <tr>
@@ -125,7 +134,7 @@ export function ReportsTable() {
         </table>
       )}
 
-      {query.data && total > 0 && (
+      {!query.error && query.data && total > 0 && (
         <div className="sticky bottom-0 flex items-center justify-between border-t border-border bg-panel px-3 py-1 font-mono text-[10px] text-muted">
           <span>{page * PAGE + 1}–{Math.min(sortedSetSize, page * PAGE + rows.length)} of {total}</span>
           <span className="flex items-center gap-2">

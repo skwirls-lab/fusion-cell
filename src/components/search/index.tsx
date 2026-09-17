@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useSelection } from '@/stores/selection';
 import { useSearch } from '@/lib/client/api';
-import { FactionDot, ReportTypeBadge, TypeBadge } from '@/lib/client/chips';
+import { EmptyState, ErrorState, FactionDot, LoadingLine, ReportTypeBadge, TypeBadge } from '@/lib/client/chips';
+import { useEscapeLayer } from '@/hooks/useEscapeLayer';
+import { ESCAPE_PRIORITY, matchesShortcut } from '@/lib/client/shortcuts';
 import { selectEntity } from '@/lib/client/select';
 
 const DEBOUNCE_MS = 200;
@@ -32,13 +34,16 @@ export function GlobalSearch() {
     return () => document.removeEventListener('mousedown', onDown);
   }, [open]);
 
-  const entities = results.data?.entities ?? [];
-  const reports = results.data?.reports ?? [];
+  const failed = results.error !== null;
+  const entities = failed ? [] : results.data?.entities ?? [];
+  const reports = failed ? [] : results.data?.reports ?? [];
   const items = [
     ...entities.map((e) => ({ key: `e:${e.id}`, run: () => { selectEntity(e.id); } })),
     ...reports.map((r) => ({ key: `r:${r.id}`, run: () => { openReport(r.reportNumber); } })),
   ];
   const showList = open && q.trim().length >= 2;
+  // Esc is handled once, globally (useShortcuts): with the list open it closes the list and leaves the box.
+  useEscapeLayer(showList, () => { setOpen(false); inputRef.current?.blur(); }, ESCAPE_PRIORITY.menu);
 
   const choose = (i: number) => {
     const it = items[i];
@@ -49,11 +54,10 @@ export function GlobalSearch() {
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Escape') { setOpen(false); inputRef.current?.blur(); return; }
     if (!showList) return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); setCursor((c) => Math.min(c + 1, items.length - 1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setCursor((c) => Math.max(c - 1, 0)); }
-    else if (e.key === 'Enter') { e.preventDefault(); choose(cursor); }
+    if (matchesShortcut('search-next', e)) { e.preventDefault(); setCursor((c) => Math.min(c + 1, items.length - 1)); }
+    else if (matchesShortcut('search-prev', e)) { e.preventDefault(); setCursor((c) => Math.max(c - 1, 0)); }
+    else if (matchesShortcut('search-choose', e)) { e.preventDefault(); choose(cursor); }
   };
 
   let idx = -1;
@@ -77,9 +81,9 @@ export function GlobalSearch() {
       />
       {showList && (
         <div id="global-search-results" role="listbox" className="panel absolute left-0 right-0 top-8 z-40 max-h-[60vh] overflow-y-auto shadow-lg shadow-black/50" data-testid="search-results">
-          {results.isPending && <div className="px-2 py-1.5 text-[11px] text-muted">Searching…</div>}
-          {results.error && <div className="px-2 py-1.5 text-[11px] text-hegemony">Search failed: {results.error.message}</div>}
-          {results.data && items.length === 0 && <div className="px-2 py-1.5 text-[11px] text-muted">No matches for “{q}”.</div>}
+          {results.isPending && <LoadingLine testId="search-loading" className="px-2 py-1.5">Searching…</LoadingLine>}
+          {results.error && <ErrorState error={results.error} retry={() => void results.refetch()} retrying={results.isFetching} title="SEARCH FAILED" testId="search-error" />}
+          {!failed && results.data && items.length === 0 && <EmptyState testId="search-empty" className="px-2! py-1.5! text-[11px]!">No entities or reports match “{q}”. Try a name, an alias or a report number.</EmptyState>}
           {entities.length > 0 && <div className="px-2 pt-1.5 font-mono text-[9px] tracking-[0.18em] text-muted">ENTITIES</div>}
           {entities.map((e) => { idx += 1; const i = idx; return (
             <button key={e.id} type="button" role="option" aria-selected={cursor === i} onMouseEnter={() => setCursor(i)} onClick={() => choose(i)}

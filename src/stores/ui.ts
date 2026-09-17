@@ -15,6 +15,9 @@ export interface UiState {
   setMaximized: (pane: Maximized) => void;
   drawerOpen: boolean;
   toggleDrawer: () => void;
+  /** The `?` shortcut overlay. */
+  helpOpen: boolean;
+  setHelpOpen: (open: boolean) => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -24,4 +27,6 @@ export const useUiStore = create<UiState>((set) => ({
   setMaximized: (maximized) => set({ maximized }),
   drawerOpen: true,
   toggleDrawer: () => set((s) => ({ drawerOpen: !s.drawerOpen })),
+  helpOpen: false,
+  setHelpOpen: (helpOpen) => set({ helpOpen }),
 }));

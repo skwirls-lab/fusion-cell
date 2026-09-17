@@ -8,7 +8,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useSelection } from '@/stores/selection';
 import { useGraph, useReport } from '@/lib/client/api';
-import { Chip, ErrorState, ReportTypeBadge, Skeleton } from '@/lib/client/chips';
+import { Chip, EmptyState, ErrorState, ReportTypeBadge, Skeleton } from '@/lib/client/chips';
+import { useEscapeLayer } from '@/hooks/useEscapeLayer';
+import { ESCAPE_PRIORITY } from '@/lib/client/shortcuts';
 import { formatDtgFull } from '@/lib/client/format';
 import { segmentBody, type Term } from '@/lib/client/highlight';
 import { selectEntity } from '@/lib/client/select';
@@ -22,6 +24,7 @@ export function ReportReader() {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (id) panelRef.current?.focus(); }, [id]);
+  useEscapeLayer(id !== null, close, ESCAPE_PRIORITY.reader);
 
   const nodeById = useMemo(() => new Map((graph.data?.nodes ?? []).map((n) => [n.id, n])), [graph.data]);
   const terms = useMemo<Term[]>(() => {
@@ -68,9 +71,10 @@ export function ReportReader() {
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2">
-        {q.isPending && <Skeleton rows={10} />}
-        {q.error && <ErrorState error={q.error} retry={() => void q.refetch()} />}
-        {r && (
+        {q.isPending && <Skeleton rows={10} testId="reader-loading" />}
+        {q.error && <ErrorState error={q.error} retry={() => void q.refetch()} retrying={q.isFetching} testId="reader-error" />}
+        {r && !q.error && !r.body.trim() && <EmptyState testId="reader-empty">This report has no body text.</EmptyState>}
+        {r && !q.error && r.body.trim() && (
           <p className="whitespace-pre-wrap text-[12px] leading-[1.55] text-text" data-testid="report-body">
             {segments.map((s, i) => s.entityId ? (
               <mark

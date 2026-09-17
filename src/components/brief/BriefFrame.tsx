@@ -8,8 +8,11 @@
 import { TopBar } from '@/components/shell/TopBar';
 import { LeftRail } from '@/components/shell/LeftRail';
 import ReportReader from '@/components/feed/ReportReader';
+import ShortcutHelp from '@/components/shell/ShortcutHelp';
+import { useShortcuts } from '@/hooks/useShortcuts';
 
 export function BriefFrame({ children }: { children: React.ReactNode }) {
+  useShortcuts(); // Esc closes the reader a citation chip opened; `/` and `?` work as everywhere else
   return (
     <div className="relative grid h-[calc(100vh-56px)] grid-rows-[auto_1fr] overflow-hidden">
       <TopBar />
@@ -18,6 +21,7 @@ export function BriefFrame({ children }: { children: React.ReactNode }) {
         <main className="min-h-0 min-w-0 overflow-hidden">{children}</main>
       </div>
       <ReportReader />
+      <ShortcutHelp />
     </div>
   );
 }

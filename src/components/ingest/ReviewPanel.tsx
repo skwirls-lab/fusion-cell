@@ -58,7 +58,7 @@ export function ReviewPanel({ job, onCommit, onDiscard, error, setError }: {
   const [keepEv, setKeepEv] = useState<boolean[]>(() => (x?.events ?? []).map(() => true));
   const [busy, setBusy] = useState(false);
 
-  if (!x) return <div className="p-3 text-[12px] text-muted">This job has no extraction to review.</div>;
+  if (!x) return <div className="p-3 text-[12px] text-muted" data-testid="ingest-review-empty" data-state="empty">This job has no extraction to review. Discard it and extract again.</div>;
 
   const patch = (i: number, p: Partial<EntityDecisionState>) => setEntities((list) => list.map((d, j) => (j === i ? { ...d, ...p } : d)));
 

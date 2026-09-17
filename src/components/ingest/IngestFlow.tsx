@@ -132,8 +132,15 @@ export function IngestFlow() {
       testId="ingest-page"
       actions={<Steps current={stepIndex} />}
     >
-      {resumeId && resumed.isPending && <Skeleton rows={6} />}
-      {resumeId && resumed.error && <ErrorState error={resumed.error} retry={() => void resumed.refetch()} />}
+      {resumeId && resumed.isPending && <Skeleton rows={6} testId="ingest-job-loading" />}
+      {resumeId && resumed.error && (
+        <div data-testid="ingest-job-error-wrap">
+          <ErrorState error={resumed.error} retry={() => void resumed.refetch()} retrying={resumed.isFetching} title={`COULD NOT LOAD JOB ${resumeId}`} testId="ingest-job-error" />
+          <p className="px-3 text-[11px] text-muted">
+            Retry, or <button type="button" onClick={reset} data-testid="ingest-job-start-over" className="text-concord hover:underline">start a new ingest</button> below.
+          </p>
+        </div>
+      )}
 
       {(phase.step === 'compose' || phase.step === 'extracting') && !(resumeId && resumed.isPending) && (
         <div className="mx-auto flex max-w-4xl flex-col gap-2 px-3 py-3" data-testid="ingest-compose">
@@ -163,7 +170,7 @@ export function IngestFlow() {
             <div role="alert" className="rounded-sm border border-hegemony/40 bg-hegemony/10 px-2 py-1.5 text-[11px]" data-testid="ingest-error">
               <div className="font-mono text-[10px] tracking-wider text-hegemony">EXTRACTION FAILED</div>
               <div className="mt-0.5 break-words text-text">{error}</div>
-              <div className="mt-0.5 text-muted">Your text is kept. Fix the input or try again.</div>
+              <div className="mt-0.5 text-muted">Your text is kept. Fix the input, or press “Retry extraction” below.</div>
             </div>
           )}
           <div className="flex items-center gap-2">

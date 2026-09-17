@@ -4,7 +4,7 @@
 import { useSelection, DEFAULT_FILTERS } from '@/stores/selection';
 import { useFactions } from '@/lib/client/api';
 import { isoToLocalInput, localInputToIso } from '@/lib/client/format';
-import { Skeleton } from '@/lib/client/chips';
+import { EmptyState, ErrorState, Skeleton } from '@/lib/client/chips';
 
 /** Control vocabularies: the same enums the API validates against (src/lib/db/schema.ts). */
 const EVENT_TYPES = ['movement', 'meeting', 'transaction', 'communication', 'sighting', 'incident'] as const;
@@ -55,9 +55,10 @@ export function FilterPanel() {
       </Group>
 
       <Group title="Factions">
-        {factions.isPending && <Skeleton rows={4} className="p-0" />}
-        {factions.error && <div className="text-[11px] text-hegemony">Could not load factions.</div>}
-        {factions.data?.map((f) => (
+        {factions.isPending && <Skeleton rows={4} className="p-0" testId="filters-factions-loading" />}
+        {factions.error && <ErrorState error={factions.error} retry={() => void factions.refetch()} retrying={factions.isFetching} testId="filters-factions-error" className="m-0!" />}
+        {!factions.error && factions.data?.length === 0 && <EmptyState testId="filters-factions-empty" className="p-0! text-[11px]!">No factions in the database. Reseed the scenario from Admin.</EmptyState>}
+        {!factions.error && factions.data?.map((f) => (
           <label key={f.id} className="flex items-center gap-1.5 py-0.5 text-[12px] text-text">
             <input
               type="checkbox" className="h-3 w-3 accent-concord" name="faction" value={f.id}

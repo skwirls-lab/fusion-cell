@@ -8,10 +8,10 @@ import { TEMPLATE_LABEL, TEMPLATE_SHORT } from './templates';
 
 export function BriefList({ selectedId, onSelect }: { selectedId: string | null; onSelect: (id: string) => void }) {
   const q = useBriefs();
-  if (q.isPending) return <Skeleton rows={5} />;
-  if (q.error) return <ErrorState error={q.error} retry={() => void q.refetch()} />;
+  if (q.isPending) return <Skeleton rows={5} testId="briefs-loading" />;
+  if (q.error) return <ErrorState error={q.error} retry={() => void q.refetch()} retrying={q.isFetching} testId="briefs-error" />;
   const briefs = q.data;
-  if (!briefs.length) return <EmptyState>No briefs yet. Draft one below.</EmptyState>;
+  if (!briefs.length) return <EmptyState testId="briefs-empty">No briefs yet. Pick a template under NEW BRIEF below and draft one, or use “Draft brief” on an analyst answer.</EmptyState>;
   return (
     <ul data-testid="brief-list" className="flex flex-col">
       {briefs.map((b) => (

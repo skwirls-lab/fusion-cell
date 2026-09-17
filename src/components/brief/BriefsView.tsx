@@ -34,7 +34,7 @@ function BriefsInner() {
           <BriefEditor key={id} id={id} onDeleted={() => open(null)} />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <EmptyState>Select a brief, or draft a new one from the left.</EmptyState>
+            <EmptyState testId="brief-editor-empty">Select a brief, or draft a new one from the left.</EmptyState>
           </div>
         )}
       </section>
@@ -45,7 +45,7 @@ function BriefsInner() {
 export function BriefsView() {
   return (
     <BriefFrame>
-      <Suspense fallback={<div className="p-3 text-[12px] text-muted">Loading…</div>}>
+      <Suspense fallback={<div role="status" data-testid="briefs-page-loading" data-state="loading" className="p-3 text-[12px] text-muted">Loading…</div>}>
         <BriefsInner />
       </Suspense>
     </BriefFrame>

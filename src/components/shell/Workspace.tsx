@@ -7,6 +7,7 @@ import { RightPanel } from './RightPanel';
 import { BottomDrawer } from './BottomDrawer';
 import ReportReader from '@/components/feed/ReportReader';
 import Toaster from '@/components/alerts/Toaster';
+import ShortcutHelp from './ShortcutHelp';
 import { useShortcuts } from '@/hooks/useShortcuts';
 import { useUrlSync } from '@/hooks/useUrlSync';
 
@@ -18,7 +19,7 @@ import { useUrlSync } from '@/hooks/useUrlSync';
  * The report reader overlays the right edge (absolute, above the right panel).
  */
 export function Workspace() {
-  useShortcuts();
+  useShortcuts({ workspace: true });
   useUrlSync();
   return (
     <div id="workspace" className="relative grid h-[calc(100vh-56px)] grid-rows-[auto_1fr] overflow-hidden">
@@ -33,6 +34,7 @@ export function Workspace() {
       </div>
       <ReportReader />
       <Toaster />
+      <ShortcutHelp />
     </div>
   );
 }

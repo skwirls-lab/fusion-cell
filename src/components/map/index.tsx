@@ -11,8 +11,8 @@ import { Skeleton } from '@/lib/client/chips';
 const DeckMap = dynamic(() => import('./DeckMap'), {
   ssr: false,
   loading: () => (
-    <div id="map-canvas-wrap" className="starfield-bg relative h-full w-full" data-marker-count="0" data-highlighted-count="0">
-      <Skeleton rows={3} className="w-48" />
+    <div id="map-canvas-wrap" tabIndex={-1} className="starfield-bg relative h-full w-full outline-none" data-marker-count="0" data-highlighted-count="0">
+      <Skeleton rows={3} className="w-48" testId="map-loading" />
     </div>
   ),
 });

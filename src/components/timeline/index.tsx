@@ -15,7 +15,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { DEFAULT_FILTERS, useSelection } from '@/stores/selection';
 import { useEvents } from '@/lib/client/api';
+import { useUiStore } from '@/stores/ui';
 import { usePrefersReducedMotion } from '@/lib/client/motion';
+import { isSpaceActivatable, matchesShortcut } from '@/lib/client/shortcuts';
 import { SCENARIO_DAYS } from '@/lib/client/format';
 import {
   SPEEDS, advance, clampFraction, cursorLabel, densityByDay, fractionToIso, isoToFraction, quantize, type Speed,
@@ -119,13 +121,17 @@ export function Timeline() {
   const reset = useCallback(() => { setPlaying(false); seek(1, true); }, [seek]);
   const replayFromStart = useCallback(() => { seek(0, true); setPlaying(true); }, [seek]);
 
-  // Space toggles play while the drawer is hovered or holds focus; never inside a text field.
+  // Space toggles play while the drawer is hovered or holds focus. It stands down wherever Space
+  // already means something — a text field, or a focused button / link / checkbox, which the key
+  // activates natively. Taking it there (with preventDefault) swallowed the click in Chromium, so a
+  // keyboard user could not press a speed button, a feed row or a filter checkbox with Space while
+  // the pointer rested on the drawer; in Firefox both fired. On the play button the native click
+  // *is* the toggle. Also inert under the modal shortcut list. The scrubber is a range input:
+  // Space is free there.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== ' ' || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
-      const t = e.target;
-      const inText = t instanceof HTMLElement && ((t.tagName === 'INPUT' && (t as HTMLInputElement).type !== 'range') || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
-      if (inText) return;
+      if (e.defaultPrevented || !matchesShortcut('toggle-replay', e)) return;
+      if (isSpaceActivatable(e.target) || useUiStore.getState().helpOpen) return;
       const drawer = wrapRef.current?.closest('#bottom-drawer');
       const focused = !!drawer && drawer.contains(document.activeElement);
       if (!hover && !focused) return;
@@ -195,6 +201,14 @@ export function Timeline() {
         </button>
         <span className="ml-auto flex items-center gap-2 font-mono text-[10px] tracking-wider">
           {cutoff && <span className="rounded-sm border border-cartel/50 px-1 text-[9px] leading-[13px] text-cartel">{playing ? 'REPLAY' : 'CUTOFF'}</span>}
+          {all.isPending && <span role="status" data-testid="timeline-loading" data-state="loading" className="animate-pulse text-[9px] text-muted">LOADING EVENTS…</span>}
+          {all.error && (
+            <span role="alert" data-testid="timeline-error" data-state="error" title={all.error.message} className="flex items-center gap-1 rounded-sm border border-hegemony/40 bg-hegemony/10 px-1 text-[9px] leading-[13px] text-hegemony">
+              <span className="max-w-[260px] truncate" data-testid="timeline-error-message">DENSITY FAILED · {all.error.message}</span>
+              <button type="button" onClick={() => void all.refetch()} disabled={all.isFetching} data-testid="timeline-error-retry" className="rounded-sm border border-border px-1 text-text hover:border-concord/50 hover:text-concord disabled:opacity-50">{all.isFetching ? 'Retrying…' : 'Retry'}</button>
+            </span>
+          )}
+          {!all.error && all.data?.length === 0 && <span data-testid="timeline-empty" data-state="empty" className="text-[9px] text-muted" title="The events table is empty: reseed the scenario from Admin, or ingest a report.">NO EVENTS TO REPLAY</span>}
           <span className={cutoff ? 'text-text' : 'text-muted'} data-testid="timeline-label">{label}</span>
         </span>
       </div>

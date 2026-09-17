@@ -16,7 +16,7 @@ import { useSelection, selectAllHighlighted } from '@/stores/selection';
 import { fetchNeighbors, useFactions, useGraph } from '@/lib/client/api';
 import { prefersReducedMotion, usePrefersReducedMotion } from '@/lib/client/motion';
 import { clearSelectionEverywhere, selectEntity } from '@/lib/client/select';
-import { ErrorState, Skeleton } from '@/lib/client/chips';
+import { EmptyState, ErrorState, Skeleton } from '@/lib/client/chips';
 import type { Entity, Relationship } from '@/lib/types';
 
 const SHAPE: Record<Entity['type'], string> = {
@@ -295,16 +295,31 @@ export function GraphView() {
       <div
         ref={hostRef}
         id="graph-canvas"
-        className="h-full w-full"
+        tabIndex={-1}
+        className="h-full w-full outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-concord/70"
         data-node-count={counts.nodes}
         data-highlighted-count={counts.highlighted}
         role="img"
         aria-label="Link chart of entities and relationships"
       />
       {(graph.isPending || !cyReady) && !graph.error && (
-        <div className="pointer-events-none absolute left-1 top-1 w-48"><Skeleton rows={3} /></div>
+        <div className="pointer-events-none absolute left-1 top-1 w-48"><Skeleton rows={3} testId="graph-loading" /></div>
       )}
-      {graph.error && <div className="absolute left-2 top-2 max-w-[280px]"><ErrorState error={graph.error} retry={() => void graph.refetch()} /></div>}
+      {graph.error && (
+        <div className="absolute left-2 top-2 z-10 max-w-[280px]">
+          <ErrorState error={graph.error} retry={() => void graph.refetch()} retrying={graph.isFetching} testId="graph-error" className="m-0! bg-panel!" />
+        </div>
+      )}
+      {!graph.error && cyReady && desired && desired.nodes.length === 0 && (
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-sm border border-border bg-panel/80">
+          <EmptyState
+            testId="graph-empty" className="py-2! text-center text-[11px]!"
+            action={graph.data && graph.data.nodes.length > 0 && hideLocations ? { label: 'Show locations', onClick: () => toggleLocations(false) } : undefined}
+          >
+            {graph.data && graph.data.nodes.length > 0 ? 'Nothing to chart: every entity is a hidden location.' : 'No entities in the database yet. Reseed the scenario from Admin.'}
+          </EmptyState>
+        </div>
+      )}
 
       <div className="absolute right-1 top-1 z-10 flex items-center gap-2 rounded-sm border border-border bg-panel/90 px-1.5 py-1 text-[10px] text-text">
         {expandError && (

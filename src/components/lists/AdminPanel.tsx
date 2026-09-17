@@ -58,9 +58,12 @@ export function AdminPanel() {
   return (
     <PageFrame title="ADMIN" subtitle={stats.data ? `${stats.data.driver} · ${stats.data.model ?? 'no model configured'}` : undefined} testId="admin-page">
       <Section title="DATABASE" aside={<button type="button" className="text-[10px] text-muted hover:text-text" onClick={() => void stats.refetch()}>refresh</button>}>
-        {stats.isPending && <Skeleton rows={3} />}
-        {stats.error && <ErrorState error={stats.error} retry={() => void stats.refetch()} />}
-        {stats.data && (
+        {stats.isPending && <Skeleton rows={3} testId="admin-stats-loading" />}
+        {stats.error && <ErrorState error={stats.error} retry={() => void stats.refetch()} retrying={stats.isFetching} testId="admin-stats-error" className="mx-0!" />}
+        {!stats.error && stats.data && Object.values(stats.data.counts).every((n) => n === 0) && (
+          <EmptyState testId="admin-stats-empty" className="px-0! pt-0!">Every table is empty. Use “Reset and reseed scenario” below to load the seed.</EmptyState>
+        )}
+        {!stats.error && stats.data && (
           <>
             <div className="grid grid-cols-3 gap-1.5 lg:grid-cols-5" data-testid="stats-grid">
               {Object.entries(stats.data.counts).map(([k, n]) => (
@@ -96,7 +99,7 @@ export function AdminPanel() {
             </>
           )}
         </div>
-        {error !== null && <ErrorState error={error} />}
+        {error !== null && <ErrorState error={error} title="RESEED FAILED" testId="admin-reseed-error" className="mx-0!" />}
         {result && (
           <div className="mt-1.5 rounded-sm border border-emerald-400/40 bg-emerald-400/10 px-2 py-1 font-mono text-[10px] text-text" role="status" data-testid="reseed-result">
             reseeded in {result.ms} ms · {Object.entries(result.counts).map(([k, n]) => `${k} ${n}`).join(' · ')}
@@ -105,10 +108,10 @@ export function AdminPanel() {
       </Section>
 
       <Section title="RECENT INGEST JOBS" aside={<Link href="/ingest" className="text-[10px] text-concord hover:underline">New ingest →</Link>}>
-        {jobs.isPending && <Skeleton rows={3} />}
-        {jobs.error && <ErrorState error={jobs.error} retry={() => void jobs.refetch()} />}
-        {jobs.data && jobs.data.length === 0 && <EmptyState>No ingest jobs yet.</EmptyState>}
-        {jobs.data && jobs.data.length > 0 && (
+        {jobs.isPending && <Skeleton rows={3} testId="admin-jobs-loading" />}
+        {jobs.error && <ErrorState error={jobs.error} retry={() => void jobs.refetch()} retrying={jobs.isFetching} testId="admin-jobs-error" className="mx-0!" />}
+        {!jobs.error && jobs.data && jobs.data.length === 0 && <EmptyState testId="admin-jobs-empty" className="px-0!">No ingest jobs yet. Start one from “New ingest”.</EmptyState>}
+        {!jobs.error && jobs.data && jobs.data.length > 0 && (
           <table className="w-full border-collapse text-[11px]" data-testid="jobs-table">
             <tbody>
               {jobs.data.map((j) => (

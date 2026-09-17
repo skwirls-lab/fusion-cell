@@ -7,6 +7,8 @@ import { useWatchlist } from '@/stores/watchlist';
 import { BellIcon } from '@/components/shell/icons';
 import { formatDtg } from '@/lib/client/format';
 import { openAlert } from './Toaster';
+import { useEscapeLayer } from '@/hooks/useEscapeLayer';
+import { ESCAPE_PRIORITY } from '@/lib/client/shortcuts';
 
 export function AlertBell() {
   const alerts = useWatchlist((s) => s.alerts);
@@ -16,6 +18,7 @@ export function AlertBell() {
   const unread = alerts.reduce((n, a) => n + (a.read ? 0 : 1), 0);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  useEscapeLayer(open, () => setOpen(false), ESCAPE_PRIORITY.menu);
 
   useEffect(() => {
     if (!open) return;
@@ -53,8 +56,10 @@ export function AlertBell() {
             </span>
           </div>
           {alerts.length === 0 ? (
-            <div className="px-2 py-3 text-[11px] text-muted">
-              No alerts yet. Star an entity in its profile; a toast fires here when a report naming it arrives or is replayed.
+            <div className="px-2 py-3 text-[11px] text-muted" data-testid="alerts-empty" data-state="empty">
+              {watched === 0
+                ? 'No alerts yet, and nothing is on the watchlist. Select an entity and press the star in its profile; an alert lands here when a report naming it arrives or is replayed.'
+                : `No alerts yet. Watching ${watched} entit${watched === 1 ? 'y' : 'ies'}: an alert lands here when a report naming one arrives or is replayed.`}
             </div>
           ) : (
             <ol className="max-h-[50vh] overflow-y-auto">

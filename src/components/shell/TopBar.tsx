@@ -8,6 +8,9 @@ import AlertBell from '@/components/alerts/Bell';
 import { useReports } from '@/lib/client/api';
 import { useSelection } from '@/stores/selection';
 import { formatDtg, scenarioDay } from '@/lib/client/format';
+import { useUiStore } from '@/stores/ui';
+import { useEscapeLayer } from '@/hooks/useEscapeLayer';
+import { ESCAPE_PRIORITY } from '@/lib/client/shortcuts';
 
 /**
  * "SCENARIO DAY N": the newest report's date relative to 2026-08-01 (day 1).
@@ -22,7 +25,8 @@ function ScenarioClock() {
   return (
     <span
       className={to ? 'font-mono text-[11px] tracking-wider text-cartel' : 'font-mono text-[11px] tracking-wider text-muted'}
-      title={to ? `Replay cutoff: ${formatDtg(to)}` : newest ? `Newest report: ${newest}` : 'Waiting for the first report'}
+      title={to ? `Replay cutoff: ${formatDtg(to)}` : newest ? `Newest report: ${newest}` : latest.error ? `Could not load the newest report: ${latest.error.message}` : latest.isPending ? 'Loading the newest report…' : 'No reports in the database yet'}
+      data-state={to || newest ? undefined : latest.error ? 'error' : latest.isPending ? 'loading' : 'empty'}
       data-testid="scenario-clock"
       data-day={day ?? undefined}
       data-replay={to ? 'true' : undefined}
@@ -37,6 +41,8 @@ export function TopBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const setHelpOpen = useUiStore((s) => s.setHelpOpen);
+  useEscapeLayer(menuOpen, () => setMenuOpen(false), ESCAPE_PRIORITY.menu);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -69,6 +75,17 @@ export function TopBar() {
 
       <div className="flex items-center gap-3">
         <ScenarioClock />
+
+        <button
+          type="button"
+          onClick={() => setHelpOpen(true)}
+          aria-label="Keyboard shortcuts"
+          title="Keyboard shortcuts ( ? )"
+          data-testid="shortcut-help-button"
+          className="flex h-7 w-7 items-center justify-center rounded font-mono text-[12px] text-muted hover:bg-panel-2 hover:text-text"
+        >
+          ?
+        </button>
 
         <AlertBell />
 

@@ -17,7 +17,7 @@ export function EntityPanel() {
 
   if (!id || !kind) {
     return (
-      <EmptyState>
+      <EmptyState testId="entity-empty">
         <div className="font-mono text-[10px] tracking-[0.18em] text-muted">NOTHING SELECTED</div>
         <p className="mt-1">Click a marker on the map, a node on the chart, a feed row, or search with <kbd className="rounded-sm border border-border px-1 font-mono">/</kbd>.</p>
       </EmptyState>
@@ -32,8 +32,8 @@ export default EntityPanel;
 
 function EntityProfileView({ id }: { id: string }) {
   const q = useEntityProfile(id);
-  if (q.isPending) return <Skeleton rows={8} />;
-  if (q.error) return <ErrorState error={q.error} retry={() => void q.refetch()} />;
+  if (q.isPending) return <Skeleton rows={8} testId="entity-loading" />;
+  if (q.error) return <ErrorState error={q.error} retry={() => void q.refetch()} retrying={q.isFetching} testId="entity-error" />;
   const p = q.data;
   return (
     <div className="flex flex-col" data-testid="entity-profile" data-entity-id={p.entity.id}>
@@ -236,10 +236,16 @@ function EventCard({ id }: { id: string }) {
   const events = useEvents(DEFAULT_FILTERS);
   const graph = useGraph();
   const nameOf = useMemo(() => new Map((graph.data?.nodes ?? []).map((n) => [n.id, n.name])), [graph.data]);
-  if (events.isPending) return <Skeleton rows={5} />;
-  if (events.error) return <ErrorState error={events.error} retry={() => void events.refetch()} />;
+  if (events.isPending) return <Skeleton rows={5} testId="event-loading" />;
+  if (events.error) return <ErrorState error={events.error} retry={() => void events.refetch()} retrying={events.isFetching} testId="event-error" />;
   const ev = events.data.find((e) => e.id === id);
-  if (!ev) return <EmptyState>Event <span className="font-mono">{id}</span> is not in the current dataset.</EmptyState>;
+  if (!ev) {
+    return (
+      <EmptyState testId="event-empty" action={{ label: 'Clear selection', onClick: () => useSelection.getState().clearSelection() }}>
+        Event <span className="font-mono">{id}</span> is not in the database.
+      </EmptyState>
+    );
+  }
   return (
     <div className="flex flex-col" data-testid="event-card" data-event-id={ev.id}>
       <div className="border-b border-border px-3 py-2">

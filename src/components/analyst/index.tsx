@@ -9,7 +9,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import Markdown, { type Components } from 'react-markdown';
 import { useSelection } from '@/stores/selection';
-import { useEntityProfile } from '@/lib/client/api';
+import { apiErrorDetail, useEntityProfile } from '@/lib/client/api';
+import { matchesShortcut } from '@/lib/client/shortcuts';
 import type { AgentEvent } from '@/lib/ai/agent';
 import { DEFAULT_MAX_STEPS } from '@/lib/ai/limits';
 import { parseSseChunk } from './sse';
@@ -138,14 +139,14 @@ function TraceBlock({ trace, streaming }: { trace: TraceStep[]; streaming: boole
   );
 }
 
-function AssistantBubble({ turn }: { turn: AssistantTurn }) {
+function AssistantBubble({ turn, onRetry }: { turn: AssistantTurn; onRetry?: () => void }) {
   const invalid = useMemo(() => new Set(turn.citations?.invalid ?? []), [turn.citations]);
   return (
     <div className="pr-2" data-testid="analyst-answer" data-streaming={turn.streaming || undefined}>
       <TraceBlock trace={turn.trace} streaming={turn.streaming} />
       {turn.limited && (
         <div className="mb-2 rounded border border-banner/60 bg-banner/10 px-2 py-1 text-[11px] text-banner" role="status">
-          Step limit reached — answer is based on partial investigation
+          Investigation budget reached (steps or time) — answer is based on a partial investigation
         </div>
       )}
       {turn.content ? (
@@ -153,11 +154,16 @@ function AssistantBubble({ turn }: { turn: AssistantTurn }) {
           <AnswerMarkdown text={turn.content} invalid={invalid} />
         </div>
       ) : turn.streaming ? (
-        <div className="text-[12px] text-muted">{turn.trace.length ? 'Investigating…' : 'Thinking…'}</div>
+        <div role="status" data-testid="analyst-loading" data-state="loading" className="animate-pulse text-[12px] text-muted">{turn.trace.length ? 'Investigating…' : 'Thinking…'}</div>
       ) : null}
       {turn.error && (
-        <div className="mt-2 rounded border border-hegemony/60 bg-hegemony/10 px-2 py-1 text-[11px] text-hegemony" role="alert">
-          {turn.error}
+        <div className="mt-2 rounded border border-hegemony/60 bg-hegemony/10 px-2 py-1 text-[11px] text-hegemony" role="alert" data-testid="analyst-error" data-state="error">
+          <div className="break-words" data-testid="analyst-error-message">{turn.error}</div>
+          {onRetry && (
+            <button type="button" onClick={onRetry} data-testid="analyst-error-retry" className="mt-1 rounded-sm border border-border px-1.5 py-px text-[10px] text-text hover:border-concord/50 hover:text-concord">
+              Retry
+            </button>
+          )}
         </div>
       )}
       {!turn.streaming && (turn.steps !== null || turn.citations) && (
@@ -219,12 +225,12 @@ export function AnalystPanel() {
     return [...contextual, ...ALWAYS_PROMPTS];
   }, [selectionName, selectedKind, selectedId]);
 
-  const ask = useCallback(async (question: string) => {
+  const ask = useCallback(async (question: string, base: Turn[] = turns) => {
     const q = question.trim();
     if (!q || streaming) return;
     const sel = useSelection.getState();
     sel.clearHighlights('ai');
-    const history = turns
+    const history = base
       .filter((t) => t.role === 'user' || (t.content && !t.error))
       .map((t) => ({ role: t.role, content: t.content }))
       .slice(-20);
@@ -255,8 +261,12 @@ export function AnalystPanel() {
         signal: ac.signal,
       });
       if (!res.ok || !res.body) {
-        const body = await res.text().catch(() => '');
-        throw new Error(`Analyst request failed (${res.status})${body ? `: ${body.slice(0, 200)}` : ''}`);
+        // Before any SSE frame: the route's typed JSON error (or a proxy's text page), not a stream.
+        if (res.status === 401) window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+        const raw = await res.text().catch(() => '');
+        let detail = raw.slice(0, 200);
+        try { detail = apiErrorDetail(JSON.parse(raw)); } catch { /* not JSON */ }
+        throw new Error(`Analyst request failed (${res.status})${detail ? `: ${detail}` : ''}`);
       }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -283,8 +293,18 @@ export function AnalystPanel() {
     }
   }, [streaming, turns, selectionName]);
 
+  /** Drops the failed exchange and asks the same question again, so a retry never doubles the question in the log. */
+  const retry = useCallback((assistantId: number) => {
+    const i = turns.findIndex((t) => t.id === assistantId);
+    const question = i > 0 && turns[i - 1].role === 'user' ? turns[i - 1].content : null;
+    if (question === null) return;
+    const base = turns.filter((_, j) => j !== i && j !== i - 1);
+    setTurns(base);
+    void ask(question, base);
+  }, [turns, ask]);
+
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (matchesShortcut('analyst-send', e.nativeEvent)) { // Enter; Shift+Enter is a new line, and an IME's Enter is its own
       e.preventDefault();
       void ask(input);
     }
@@ -310,7 +330,7 @@ export function AnalystPanel() {
     <div className="flex h-full min-h-0 flex-col" data-testid="analyst-panel">
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
         {turns.length === 0 ? (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3" data-testid="analyst-empty" data-state="empty">
             <p className="text-[12px] leading-relaxed text-muted">
               Ask a question about the Meridian Reach picture. The analyst retrieves reports and graph
               data with tools, shows every step it took, cites report numbers you can open, and highlights
@@ -320,7 +340,7 @@ export function AnalystPanel() {
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {turns.map((t) =>
+            {turns.map((t, i) =>
               t.role === 'user' ? (
                 <div key={t.id} className="flex justify-end">
                   <div className="max-w-[85%] rounded-lg rounded-br-sm bg-panel-2 px-3 py-1.5 text-[12px] text-muted whitespace-pre-wrap" data-testid="analyst-user">
@@ -328,7 +348,8 @@ export function AnalystPanel() {
                   </div>
                 </div>
               ) : (
-                <AssistantBubble key={t.id} turn={t} />
+                // Retry only on the newest exchange: re-asking an older one would reorder the conversation.
+                <AssistantBubble key={t.id} turn={t} onRetry={t.error && !t.streaming && !streaming && i === turns.length - 1 ? () => retry(t.id) : undefined} />
               ),
             )}
             <div ref={endRef} />

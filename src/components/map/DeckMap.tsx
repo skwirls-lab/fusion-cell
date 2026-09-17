@@ -14,12 +14,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DeckGL, { type DeckGLRef } from '@deck.gl/react';
 import { FlyToInterpolator, WebMercatorViewport, type MapViewState, type PickingInfo } from '@deck.gl/core';
 import { LineLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
-import { useSelection, selectAllHighlighted } from '@/stores/selection';
+import { DEFAULT_FILTERS, useSelection, selectAllHighlighted } from '@/stores/selection';
 import { useEvents, useFactions, useGraph } from '@/lib/client/api';
 import { formatDtg, hexToRgb } from '@/lib/client/format';
 import { usePrefersReducedMotion } from '@/lib/client/motion';
 import { clearSelectionEverywhere, selectEntity, selectEvent } from '@/lib/client/select';
-import { ErrorState } from '@/lib/client/chips';
+import { ErrorState, Skeleton } from '@/lib/client/chips';
 import type { Entity, Event } from '@/lib/types';
 
 type RGB = [number, number, number];
@@ -261,13 +261,17 @@ export default function DeckMap() {
   }, [locations, eventData]);
 
   const loading = graph.isPending || events.isPending;
+  const filtersActive = JSON.stringify(filters) !== JSON.stringify(DEFAULT_FILTERS);
+  const resetFilters = useSelection((s) => s.resetFilters);
   const error = graph.error ?? events.error ?? factions.error;
 
   return (
     <div
       ref={wrapRef}
       id="map-canvas-wrap"
-      className="starfield-bg relative h-full w-full overflow-hidden"
+      tabIndex={-1}
+      aria-label="Operational map"
+      className="starfield-bg relative h-full w-full overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-concord/70"
       data-marker-count={markerCount}
       data-highlighted-count={highlightedCount}
       data-loading={loading ? 'true' : undefined}
@@ -291,10 +295,24 @@ export default function DeckMap() {
       <div className="pointer-events-none absolute bottom-1 left-2 font-mono text-[10px] text-muted">
         {loading ? 'loading…' : `${locations.length} loc · ${eventData.length} evt · z${zoom.toFixed(1)}`}
       </div>
-      {error && <div className="absolute left-2 top-2 max-w-[280px]"><ErrorState error={error} retry={() => { void graph.refetch(); void events.refetch(); }} /></div>}
+      {loading && !error && <div className="pointer-events-none absolute left-1 top-1 w-48"><Skeleton rows={3} testId="map-loading" /></div>}
+      {error && (
+        <div className="absolute left-2 top-2 z-10 max-w-[280px]">
+          <ErrorState
+            error={error} testId="map-error" className="m-0! bg-panel!"
+            retrying={graph.isFetching || events.isFetching || factions.isFetching}
+            retry={() => { if (graph.error) void graph.refetch(); if (events.error) void events.refetch(); if (factions.error) void factions.refetch(); }}
+          />
+        </div>
+      )}
       {!loading && !error && events.data?.length === 0 && (
-        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-sm border border-border bg-panel/80 px-2 py-1 text-[11px] text-muted">
-          No events match the current filters
+        <div data-testid="map-empty" data-state="empty" className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-sm border border-border bg-panel/80 px-2 py-1 text-[11px] text-muted">
+          <span>{filtersActive ? 'No events match the current filters' : 'No events in the database yet'}</span>
+          {filtersActive && (
+            <button type="button" onClick={resetFilters} data-testid="map-reset-filters" className="pointer-events-auto rounded-sm border border-border px-1.5 py-px text-[11px] text-text hover:border-concord/50 hover:text-concord">
+              Reset filters
+            </button>
+          )}
         </div>
       )}
       {selectedEventBadge(selectedKind, selectedId, eventById)}

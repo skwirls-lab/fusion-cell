@@ -9,7 +9,9 @@ import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useQueryClient } from '@tanstack/react-query';
 import { BRIEFS_KEY, useSearch } from '@/lib/client/api';
-import { FactionDot, TypeBadge } from '@/lib/client/chips';
+import { EmptyState, ErrorState, FactionDot, LoadingLine, TypeBadge } from '@/lib/client/chips';
+import { useEscapeLayer } from '@/hooks/useEscapeLayer';
+import { ESCAPE_PRIORITY } from '@/lib/client/shortcuts';
 import { TEMPLATES, type BriefTemplate } from './templates';
 import { streamBrief } from './stream';
 import { TraceList, foldTrace, type TraceStep } from './TraceList';
@@ -34,6 +36,9 @@ function EntityPicker({ value, onChange }: { value: PickedEntity | null; onChang
     return () => document.removeEventListener('mousedown', onDown);
   }, [open]);
 
+  const showList = !value && open && q.trim().length >= 2;
+  useEscapeLayer(showList, () => setOpen(false), ESCAPE_PRIORITY.menu);
+
   if (value) {
     return (
       <div className="flex items-center gap-2 rounded border border-border bg-bg px-2 py-1 text-[12px]" data-testid="brief-entity-picked" data-entity-id={value.id}>
@@ -45,8 +50,8 @@ function EntityPicker({ value, onChange }: { value: PickedEntity | null; onChang
       </div>
     );
   }
-  const entities = results.data?.entities ?? [];
-  const showList = open && q.trim().length >= 2;
+  const entities = results.error ? [] : results.data?.entities ?? [];
+
   return (
     <div ref={wrapRef} className="relative">
       <input
@@ -62,9 +67,9 @@ function EntityPicker({ value, onChange }: { value: PickedEntity | null; onChang
       />
       {showList && (
         <div role="listbox" className="panel absolute left-0 right-0 top-8 z-40 max-h-[40vh] overflow-y-auto shadow-lg shadow-black/50" data-testid="brief-entity-results">
-          {results.isPending && <div className="px-2 py-1.5 text-[11px] text-muted">Searching…</div>}
-          {results.error && <div className="px-2 py-1.5 text-[11px] text-hegemony">Search failed: {results.error.message}</div>}
-          {results.data && entities.length === 0 && <div className="px-2 py-1.5 text-[11px] text-muted">No entities match “{q}”.</div>}
+          {results.isPending && <LoadingLine testId="brief-entity-loading" className="px-2 py-1.5">Searching…</LoadingLine>}
+          {results.error && <ErrorState error={results.error} retry={() => void results.refetch()} retrying={results.isFetching} title="SEARCH FAILED" testId="brief-entity-error" />}
+          {!results.error && results.data && entities.length === 0 && <EmptyState testId="brief-entity-empty" className="px-2! py-1.5! text-[11px]!">No entities match “{q}”. Try a name or an alias.</EmptyState>}
           {entities.map((e) => (
             <button key={e.id} type="button" role="option" aria-selected={false} onClick={() => { onChange(e); setOpen(false); setRaw(''); }}
               className="flex w-full items-center gap-2 px-2 py-1 text-left text-[12px] text-text hover:bg-panel-2 hover:text-concord">

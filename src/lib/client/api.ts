@@ -18,9 +18,27 @@ import { filtersToParams } from '@/stores/selection';
 
 export type Params = Record<string, string | number | string[] | null | undefined>;
 
+/**
+ * The routes' typed error body (src/lib/api: `{ error, message? , issues? }`) as one line:
+ * the code, then the human message or the first validation issue when the route sent one.
+ */
+export function apiErrorDetail(body: unknown): string {
+  if (typeof body !== 'object' || body === null) return 'request failed';
+  const b = body as { error?: unknown; message?: unknown; issues?: unknown };
+  const code = typeof b.error === 'string' ? b.error : null;
+  let detail = typeof b.message === 'string' && b.message ? b.message : null;
+  if (!detail && Array.isArray(b.issues) && b.issues.length) {
+    const first = b.issues[0] as { path?: unknown; message?: unknown };
+    const where = Array.isArray(first.path) && first.path.length ? `${first.path.join('.')}: ` : '';
+    if (typeof first.message === 'string') detail = `${where}${first.message}`;
+  }
+  if (code && detail) return `${code} — ${detail}`;
+  return code ?? detail ?? 'request failed';
+}
+
 export class ApiRequestError extends Error {
   constructor(public readonly status: number, public readonly path: string, public readonly body: unknown) {
-    super(`${path} → ${status}: ${typeof body === 'object' && body && 'error' in body ? String((body as { error: unknown }).error) : 'request failed'}`);
+    super(`${path} → ${status}: ${apiErrorDetail(body)}`);
     this.name = 'ApiRequestError';
   }
 }

@@ -56,10 +56,20 @@ export function FeedView() {
     return () => window.clearTimeout(t);
   }, [q.data, nameOf]);
 
-  if (q.isPending) return <Skeleton rows={6} />;
-  if (q.error) return <ErrorState error={q.error} retry={() => void q.refetch()} />;
+  if (q.isPending) return <Skeleton rows={6} testId="feed-loading" />;
+  // A failed poll replaces the rows rather than sitting beside stale ones; Retry (or the next poll) brings them back.
+  if (q.error) return <ErrorState error={q.error} retry={() => void q.refetch()} retrying={q.isFetching} testId="feed-error" />;
   const rows = q.data.reports;
-  if (rows.length === 0) return <EmptyState>No reports match the current filters.</EmptyState>;
+  if (rows.length === 0) {
+    const filtered = reportTypes.length > 0 || from !== null || to !== null;
+    return (
+      <EmptyState testId="feed-empty" action={filtered ? { label: 'Reset filters', onClick: () => useSelection.getState().resetFilters(), testId: 'feed-reset-filters' } : undefined}>
+        {filtered
+          ? <>No reports match the current filters.{to !== null ? ' The timeline cutoff hides everything after it: press play, or reset.' : ''}</>
+          : <>No reports in the database yet. Ingest one from the Ingest page, or reseed the scenario from Admin.</>}
+      </EmptyState>
+    );
+  }
 
   return (
     <div data-testid="feed" data-row-count={rows.length} data-total={q.data.total}>

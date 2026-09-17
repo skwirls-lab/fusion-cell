@@ -10,6 +10,7 @@
 import { TopBar } from '@/components/shell/TopBar';
 import { LeftRail } from '@/components/shell/LeftRail';
 import ReportReader from '@/components/feed/ReportReader';
+import ShortcutHelp from '@/components/shell/ShortcutHelp';
 import { useShortcuts } from '@/hooks/useShortcuts';
 
 export function PageFrame({ title, subtitle, actions, children, testId }: {
@@ -19,7 +20,7 @@ export function PageFrame({ title, subtitle, actions, children, testId }: {
   children: React.ReactNode;
   testId?: string;
 }) {
-  useShortcuts(); // Esc closes the reader, `/` focuses global search — same keys as the workspace
+  useShortcuts(); // the global keys (Esc, `/`, `?`); the map/chart/analyst keys are workspace-only
   return (
     <div id="page" className="relative grid h-[calc(100vh-56px)] grid-rows-[auto_1fr] overflow-hidden">
       <TopBar />
@@ -35,6 +36,7 @@ export function PageFrame({ title, subtitle, actions, children, testId }: {
         </main>
       </div>
       <ReportReader />
+      <ShortcutHelp />
     </div>
   );
 }

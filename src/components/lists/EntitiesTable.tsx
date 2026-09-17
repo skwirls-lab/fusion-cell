@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEntityList, useFactions } from '@/lib/client/api';
-import { EmptyState, ErrorState, FactionChip, Skeleton, TypeBadge } from '@/lib/client/chips';
+import { EmptyState, ErrorState, FactionChip, LoadingLine, Skeleton, TypeBadge } from '@/lib/client/chips';
 import { confidencePct } from '@/lib/client/format';
 import { PageFrame, TH, FilterChip, inputClass } from './PageFrame';
 
@@ -51,7 +51,14 @@ export function EntitiesTable() {
           {ENTITY_TYPES.map((t) => <FilterChip key={t} active={types.includes(t)} onClick={() => toggle(setTypes, t)} testId={`type-chip-${t}`}>{t}</FilterChip>)}
         </div>
         <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Faction filter">
-          {factions.data?.map((f) => (
+          {factions.isPending && <LoadingLine testId="entities-factions-loading" className="text-[10px]!">factions…</LoadingLine>}
+          {factions.error && (
+            <span role="alert" data-testid="entities-factions-error" data-state="error" title={factions.error.message} className="flex items-center gap-1 text-[10px] text-hegemony">
+              Faction filter unavailable
+              <button type="button" onClick={() => void factions.refetch()} className="rounded-sm border border-border px-1 text-text hover:border-concord/50 hover:text-concord">Retry</button>
+            </span>
+          )}
+          {!factions.error && factions.data?.map((f) => (
             <FilterChip key={f.id} active={factionIds.includes(f.id)} onClick={() => toggle(setFactionIds, f.id)} color={f.color} testId={`faction-chip-${f.id}`}>{f.name}</FilterChip>
           ))}
         </div>
@@ -60,10 +67,19 @@ export function EntitiesTable() {
         )}
       </div>
 
-      {query.isPending && <Skeleton rows={12} />}
-      {query.error && <ErrorState error={query.error} retry={() => void query.refetch()} />}
-      {query.data && rows.length === 0 && <EmptyState>No entities match.</EmptyState>}
-      {query.data && rows.length > 0 && (
+      {query.isPending && <Skeleton rows={12} testId="entities-loading" />}
+      {query.error && <ErrorState error={query.error} retry={() => void query.refetch()} retrying={query.isFetching} testId="entities-error" />}
+      {!query.error && query.data && rows.length === 0 && (
+        <EmptyState
+          testId="entities-empty"
+          action={q || input || types.length || factionIds.length ? { label: 'Clear search and filters', onClick: () => { setInput(''); setQ(''); setTypes([]); setFactionIds([]); }, testId: 'entities-clear' } : undefined}
+        >
+          {q || types.length || factionIds.length
+            ? <>No entities match{q ? ` “${q}”` : ''}{types.length ? ` of type ${types.join(', ')}` : ''}{factionIds.length ? ` in ${factionIds.map((f) => factionName.get(f) ?? f).join(', ')}` : ''}.</>
+            : <>No entities in the database yet. Reseed the scenario from Admin.</>}
+        </EmptyState>
+      )}
+      {!query.error && query.data && rows.length > 0 && (
         <table className="w-full border-collapse text-[11px]" data-testid="entities-table" data-row-count={rows.length}>
           <thead>
             <tr>

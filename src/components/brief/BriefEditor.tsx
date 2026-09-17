@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { BRIEFS_KEY, patchBrief, removeBrief, useBrief, type BriefFull } from '@/lib/client/api';
 import { ErrorState, Skeleton, TypeBadge } from '@/lib/client/chips';
 import { formatDtgFull } from '@/lib/client/format';
+import { matchesShortcut } from '@/lib/client/shortcuts';
 import { BriefPreview } from './BriefPreview';
 import { TEMPLATE_LABEL } from './templates';
 
@@ -65,7 +66,7 @@ function Editor({ brief, onDeleted }: { brief: BriefFull; onDeleted: () => void 
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); void save(); }
+    if (matchesShortcut('brief-save', e.nativeEvent)) { e.preventDefault(); void save(); }
   };
 
   return (
@@ -123,7 +124,7 @@ function Editor({ brief, onDeleted }: { brief: BriefFull; onDeleted: () => void 
             No validated citations — this brief cites no retrieved reports
           </div>
         )}
-        {error && <div role="alert" className="rounded border border-hegemony/60 bg-hegemony/10 px-2 py-1 text-[11px] text-hegemony">{error}</div>}
+        {error && <div role="alert" data-testid="brief-save-error" data-state="error" className="rounded border border-hegemony/60 bg-hegemony/10 px-2 py-1 text-[11px] text-hegemony">{error}</div>}
       </header>
 
       <div className="min-h-0 flex-1">
@@ -148,7 +149,7 @@ function Editor({ brief, onDeleted }: { brief: BriefFull; onDeleted: () => void 
 
 export function BriefEditor({ id, onDeleted }: { id: string; onDeleted: () => void }) {
   const q = useBrief(id);
-  if (q.isPending) return <div className="p-3"><Skeleton rows={12} /></div>;
-  if (q.error) return <ErrorState error={q.error} retry={() => void q.refetch()} />;
+  if (q.isPending) return <div className="p-3"><Skeleton rows={12} testId="brief-editor-loading" /></div>;
+  if (q.error) return <ErrorState error={q.error} retry={() => void q.refetch()} retrying={q.isFetching} testId="brief-editor-error" />;
   return <Editor key={q.data.id} brief={q.data} onDeleted={onDeleted} />;
 }
