@@ -55,7 +55,11 @@
       "LANTERN remains unidentified",
       "insufficient evidence to identify LANTERN"
     ],
-    "required": true
+    "required": true,
+    "rubric": {
+      "mustConclude": "The answer identifies Lt Cmdr Ilsa Varro as LANTERN (or as the most likely / probable LANTERN) and says she is passing Concord convoy schedule information that reaches the Ashen Cartel and/or the Vantor Hegemony, enabling a threat to Convoy 7 at Tessaly Gate.",
+      "mustNotConclude": "The answer names someone other than Ilsa Varro (for example Doss Renley) as the most likely LANTERN, or declines to identify anyone."
+    }
   },
   {
     "id": "brightwater-money",
@@ -100,15 +104,11 @@
         "R-0049"
       ]
     ],
-    "mustNotClaim": [
-      "Renley is LANTERN",
-      "Renley is the leak",
-      "Renley is leaking",
-      "Renley leaked",
-      "Renley is leaking",
-      "Renley is likely LANTERN",
-      "Renley is probably LANTERN"
-    ]
+    "mustNotClaim": [],
+    "rubric": {
+      "mustConclude": "The answer judges that the available evidence does NOT support Doss Renley being involved in leaking convoy schedules (for example: no evidence, unlikely, his Kestrel travel was official or legitimate business with Halloway & Sons), even if it notes that he had schedule access.",
+      "mustNotConclude": "The answer assesses Renley as likely, probably, or the leading candidate to be the leaker or LANTERN."
+    }
   },
   {
     "id": "halloway-herring",
@@ -130,7 +130,11 @@
       [
         "R-0038"
       ]
-    ]
+    ],
+    "rubric": {
+      "mustConclude": "The answer explains the Cartel-linked payment to Halloway & Sons as payment for real goods or services (salvage / hull recovery cargo) and treats Halloway as a legitimate trader or the payment as consistent with legitimate business.",
+      "mustNotConclude": "The answer assesses Halloway & Sons as a knowing participant in the convoy schedule leak or as a Cartel front."
+    }
   },
   {
     "id": "raiders",

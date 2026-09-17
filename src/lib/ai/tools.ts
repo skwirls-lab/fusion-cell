@@ -54,7 +54,7 @@ export const searchReports = defineTool({
   name: 'search_reports',
   description:
     'Full-text search over intelligence reports. Use this FIRST for any question: search broad terms (a codename, a person, a vessel, a place, "transponder", "payment") before drilling into single reports. ' +
-    'Returns report_number, type, title, date, Admiralty grading and a snippet. The report_number values (e.g. R-0042) are what you cite as [R-0042]. Filter by type or by an entity id when the topic is known.',
+    'Returns report_number, type, title, date, Admiralty grading and a snippet; results matching every term come first (match: all_terms), then reports matching only some terms (some_terms). The report_number values (e.g. R-0042) are what you cite as [R-0042]. Filter by type or by an entity id when the topic is known.',
   schema: z.object({
     query: z.string().min(1).max(200).describe('Search terms; plain words, no operators'),
     types: z.array(ReportType).optional().describe('Restrict to these report types'),
@@ -62,23 +62,30 @@ export const searchReports = defineTool({
     limit: z.number().int().min(1).max(25).default(10),
   }),
   async run(db, a, ctx) {
-    const { reports, total } = await listReports(db, {
-      q: a.query, type: a.types, entity: a.entity_id, limit: a.limit, offset: 0,
+    const base = { q: a.query, type: a.types, entity: a.entity_id, offset: 0 };
+    const strict = await listReports(db, { ...base, limit: a.limit });
+    // Backfill with reports matching only SOME of the terms: a multi-word query is ANDed by the
+    // full-text index, and one word the reports never use ("Doss" vs "Cmdr Renley") would hide them all.
+    let partial: typeof strict.reports = [];
+    if (strict.reports.length < a.limit) {
+      const have = new Set(strict.reports.map((r) => r.reportNumber));
+      const loose = await listReports(db, { ...base, limit: a.limit + have.size }, { match: 'any' });
+      partial = loose.reports.filter((r) => !have.has(r.reportNumber)).slice(0, a.limit - strict.reports.length);
+    }
+    const shape = (r: (typeof strict.reports)[number], match: 'all_terms' | 'some_terms') => ({
+      report_number: r.reportNumber,
+      type: r.type,
+      title: r.title,
+      reported_at: r.reportedAt,
+      event_at: r.eventAt,
+      grading: `${r.sourceReliability}${r.infoCredibility}`,
+      match,
+      snippet: clip(r.snippet, 300),
+      entity_ids: r.entityIds,
     });
-    for (const r of reports) ctx.seenReportNumbers.add(r.reportNumber);
-    return {
-      total,
-      reports: reports.map((r) => ({
-        report_number: r.reportNumber,
-        type: r.type,
-        title: r.title,
-        reported_at: r.reportedAt,
-        event_at: r.eventAt,
-        grading: `${r.sourceReliability}${r.infoCredibility}`,
-        snippet: clip(r.snippet, 300),
-        entity_ids: r.entityIds,
-      })),
-    };
+    const reports = [...strict.reports.map((r) => shape(r, 'all_terms')), ...partial.map((r) => shape(r, 'some_terms'))];
+    for (const r of reports) ctx.seenReportNumbers.add(r.report_number);
+    return { total_all_terms: strict.total, reports };
   },
   label: (a) => `Searching reports for "${a.query}"`,
   summarize: (r) => `${count(r, 'reports')} reports`,

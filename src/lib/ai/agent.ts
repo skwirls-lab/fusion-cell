@@ -8,7 +8,7 @@
 import type { Db } from '../db';
 import { existingReportNumbers } from '../db/queries';
 import type { ChatMessage, ChatProvider, ProviderEvent, ToolCallRecord, Usage } from './provider';
-import { SYSTEM_PROMPT, FORCE_ANSWER_NUDGE, buildUserContext, type SelectionContext } from './prompt';
+import { SYSTEM_PROMPT, FORCE_ANSWER_NUDGE, EMPTY_ANSWER_NUDGE, buildUserContext, type SelectionContext } from './prompt';
 import { TOOLS, toToolSpecs, stringifyResult, type AnalystTool, type ToolContext } from './tools';
 import { DEFAULT_MAX_STEPS } from './limits';
 
@@ -19,7 +19,7 @@ export type AgentEvent =
   | { type: 'ui'; action: 'highlight'; entityIds: string[]; eventIds: string[]; edgeIds: string[] }
   | { type: 'token'; delta: string }
   | { type: 'citations'; valid: string[]; invalid: string[] }
-  | { type: 'limit'; reason: 'steps' | 'tokens' }
+  | { type: 'limit'; reason: 'steps' | 'tokens' | 'time' }
   | { type: 'done'; answer: string; steps: number; model: string; usage?: unknown }
   | { type: 'error'; message: string };
 
@@ -37,6 +37,9 @@ export interface RunAgentOptions {
   selection?: SelectionContext | null;
   history?: HistoryTurn[];
   maxSteps?: number;
+  /** Wall-clock budget for tool turns. Once spent, the next turn is the forced final answer, so a platform time limit cuts off nothing. */
+  budgetMs?: number;
+  now?: () => number;
   temperature?: number;
   tools?: AnalystTool[];
   /** Client went away: stop between steps, emit nothing more. */
@@ -89,6 +92,9 @@ const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 export async function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
   const { db, provider, emit, signal } = opts;
   const maxSteps = opts.maxSteps ?? DEFAULT_MAX_STEPS;
+  const now = opts.now ?? Date.now;
+  const startedAt = now();
+  const outOfTime = () => opts.budgetMs !== undefined && now() - startedAt >= opts.budgetMs;
   const tools = opts.tools ?? TOOLS;
   const specs = toToolSpecs(tools);
   const ctx: ToolContext = { seenReportNumbers: new Set() };
@@ -149,6 +155,11 @@ export async function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
 
     while (!finalTurn) {
       checkAborted();
+      if (result.steps > 0 && outOfTime()) {
+        result.limited = true;
+        send({ type: 'limit', reason: 'time' });
+        break;
+      }
       const turn = await collectTurn(provider.complete({ messages, tools: specs, temperature: opts.temperature, signal }));
       if (turn.usage) result.usage = turn.usage;
 
@@ -176,16 +187,23 @@ export async function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
       }
     }
 
-    if (!finalTurn) {
+    // Tools are withheld on these calls, so nothing can precede a tool call: stream live.
+    const answerWithoutTools = async (nudge: string): Promise<Turn> => {
       checkAborted();
-      messages.push({ role: 'system', content: FORCE_ANSWER_NUDGE });
-      // Tools are withheld, so nothing here can precede a tool call: stream live.
-      finalTurn = await collectTurn(
+      // A user turn, not a system one: after tool results some chat templates treat a late
+      // system message as text to continue (seen live: the answer opened with half the nudge).
+      messages.push({ role: 'user', content: nudge });
+      const turn = await collectTurn(
         provider.complete({ messages, tools: [], temperature: opts.temperature, signal }),
         (delta) => send({ type: 'token', delta }),
       );
-      if (finalTurn.usage) result.usage = finalTurn.usage;
-    }
+      if (turn.usage) result.usage = turn.usage;
+      return turn;
+    };
+
+    if (!finalTurn) finalTurn = await answerWithoutTools(FORCE_ANSWER_NUDGE);
+    // Seen live: a turn that ends with no text and no tool calls. Ask once more rather than fail the question.
+    if (!finalTurn.text.trim()) finalTurn = await answerWithoutTools(EMPTY_ANSWER_NUDGE);
 
     result.answer = finalTurn.text.trim();
     messages.push({ role: 'assistant', content: result.answer });

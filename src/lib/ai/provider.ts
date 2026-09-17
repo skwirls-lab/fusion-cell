@@ -64,6 +64,22 @@ export interface OpenRouterOptions {
   apiKey?: string;
   model?: string;
   baseURL?: string;
+  reasoning?: string;
+  /** Silence tolerated on a stream before it is abandoned (default STALL_MS). */
+  stallMs?: number;
+}
+
+/**
+ * OpenRouter's unified `reasoning` parameter, from OPENROUTER_REASONING:
+ * "off" disables thinking, "low" | "medium" | "high" sets the effort, anything
+ * else (or unset) leaves the model's default. Thinking tokens are the bulk of
+ * each tool turn's wall-clock, which matters under a serverless time limit.
+ */
+export function reasoningParam(setting: string | undefined): Record<string, unknown> | undefined {
+  const v = setting?.trim().toLowerCase();
+  if (v === 'off' || v === 'none') return { enabled: false };
+  if (v === 'low' || v === 'medium' || v === 'high') return { effort: v };
+  return undefined;
 }
 
 const toOpenAiTool = (t: ToolSpec): ChatCompletionTool => ({
@@ -84,15 +100,29 @@ function toOpenAiMessage(m: ChatMessage): ChatCompletionMessageParam {
   }
 }
 
+/** How long a stream may stay silent before it is treated as hung. */
+export const STALL_MS = 60_000;
+
+export class ModelStallError extends Error {
+  constructor(model: string, ms: number) {
+    super(`The model (${model}) sent nothing for ${Math.round(ms / 1000)}s; the stream was abandoned.`);
+    this.name = 'ModelStallError';
+  }
+}
+
 export class OpenRouterProvider implements ChatProvider {
   readonly model: string;
   private readonly client: OpenAI;
+  private readonly reasoning: Record<string, unknown> | undefined;
+  private readonly stallMs: number;
 
   constructor(opts: OpenRouterOptions = {}) {
     const apiKey = opts.apiKey ?? process.env.OPENROUTER_API_KEY;
     if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set');
     this.model = opts.model ?? process.env.OPENROUTER_MODEL ?? '';
     if (!this.model) throw new Error('OPENROUTER_MODEL is not set');
+    this.stallMs = opts.stallMs ?? STALL_MS;
+    this.reasoning = reasoningParam(opts.reasoning ?? process.env.OPENROUTER_REASONING);
     this.client = new OpenAI({
       apiKey,
       baseURL: opts.baseURL ?? 'https://openrouter.ai/api/v1',
@@ -101,40 +131,87 @@ export class OpenRouterProvider implements ChatProvider {
     });
   }
 
+  /**
+   * One streamed completion. A stream that goes silent for STALL_MS is aborted:
+   * without this a hung upstream holds the request until the SDK's 10-minute
+   * default. If nothing had been yielded yet the call is retried once; after
+   * text has reached the consumer a retry would duplicate it, so it throws.
+   */
   async *complete(req: CompleteRequest): AsyncIterable<ProviderEvent> {
-    const stream = await this.client.chat.completions.create({
-      model: this.model,
-      messages: req.messages.map(toOpenAiMessage),
-      tools: req.tools.length ? req.tools.map(toOpenAiTool) : undefined,
-      temperature: req.temperature,
-      stream: true,
-      stream_options: { include_usage: true },
-    }, { signal: req.signal });
+    for (let attempt = 0; ; attempt++) {
+      let yielded = false;
+      try {
+        for await (const ev of this.attempt(req)) {
+          yielded = true;
+          yield ev;
+        }
+        return;
+      } catch (e) {
+        if (!(e instanceof ModelStallError) || yielded || attempt >= 1 || req.signal?.aborted) throw e;
+      }
+    }
+  }
+
+  private async *attempt(req: CompleteRequest): AsyncIterable<ProviderEvent> {
+    const ac = new AbortController();
+    const onOuterAbort = () => ac.abort();
+    req.signal?.addEventListener('abort', onOuterAbort, { once: true });
+    if (req.signal?.aborted) ac.abort();
+    let stalled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const arm = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { stalled = true; ac.abort(); }, this.stallMs);
+    };
 
     const pending = new Map<number, { id: string; name: string; args: string }>();
     let finishReason = 'stop';
     let usage: Usage | undefined;
 
-    for await (const chunk of stream as AsyncIterable<ChatCompletionChunk>) {
-      if (chunk.usage) {
-        usage = {
-          promptTokens: chunk.usage.prompt_tokens,
-          completionTokens: chunk.usage.completion_tokens,
-          totalTokens: chunk.usage.total_tokens,
-        };
+    try {
+      arm();
+      const stream = await this.client.chat.completions.create({
+        model: this.model,
+        messages: req.messages.map(toOpenAiMessage),
+        tools: req.tools.length ? req.tools.map(toOpenAiTool) : undefined,
+        temperature: req.temperature,
+        stream: true,
+        stream_options: { include_usage: true },
+        // Not in the SDK's types: an OpenRouter extension, passed through in the body.
+        ...(this.reasoning ? { reasoning: this.reasoning } : {}),
+      } as OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming, { signal: ac.signal });
+
+      for await (const chunk of stream as AsyncIterable<ChatCompletionChunk>) {
+        arm(); // any chunk counts, including reasoning-only deltas
+        if (chunk.usage) {
+          usage = {
+            promptTokens: chunk.usage.prompt_tokens,
+            completionTokens: chunk.usage.completion_tokens,
+            totalTokens: chunk.usage.total_tokens,
+          };
+        }
+        const choice = chunk.choices[0];
+        if (!choice) continue;
+        if (choice.delta.content) yield { type: 'text', delta: choice.delta.content };
+        for (const tc of choice.delta.tool_calls ?? []) {
+          const cur = pending.get(tc.index) ?? { id: '', name: '', args: '' };
+          if (tc.id) cur.id = tc.id;
+          if (tc.function?.name) cur.name += tc.function.name;
+          if (tc.function?.arguments) cur.args += tc.function.arguments;
+          pending.set(tc.index, cur);
+        }
+        if (choice.finish_reason) finishReason = choice.finish_reason;
       }
-      const choice = chunk.choices[0];
-      if (!choice) continue;
-      if (choice.delta.content) yield { type: 'text', delta: choice.delta.content };
-      for (const tc of choice.delta.tool_calls ?? []) {
-        const cur = pending.get(tc.index) ?? { id: '', name: '', args: '' };
-        if (tc.id) cur.id = tc.id;
-        if (tc.function?.name) cur.name += tc.function.name;
-        if (tc.function?.arguments) cur.args += tc.function.arguments;
-        pending.set(tc.index, cur);
-      }
-      if (choice.finish_reason) finishReason = choice.finish_reason;
+    } catch (e) {
+      if (stalled) throw new ModelStallError(this.model, this.stallMs);
+      throw e;
+    } finally {
+      clearTimeout(timer);
+      req.signal?.removeEventListener('abort', onOuterAbort);
     }
+    // The SDK ends an aborted stream without throwing; a cut-off turn must never read as a finished one.
+    if (stalled) throw new ModelStallError(this.model, this.stallMs);
+    if (ac.signal.aborted) throw new Error('aborted');
 
     for (const [index, tc] of [...pending.entries()].sort((a, b) => a[0] - b[0])) {
       yield { type: 'tool_call', id: tc.id || `call_${index}`, name: tc.name, argumentsJson: tc.args };

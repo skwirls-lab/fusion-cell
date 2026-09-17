@@ -19,6 +19,7 @@ import { entityHeadsByIds, existingReportNumbers } from '../db/queries';
 import { BRIEF_TEMPLATES } from '../db/schema';
 import { runAgent, CITATION_RE, type AgentEvent } from './agent';
 import type { ChatMessage, ChatProvider } from './provider';
+import { BRIEF_AGENT_BUDGET_MS } from './limits';
 
 export type BriefTemplate = (typeof BRIEF_TEMPLATES)[number];
 export const BriefTemplateSchema = z.enum(BRIEF_TEMPLATES);
@@ -335,7 +336,8 @@ export async function draftBrief(opts: DraftBriefOptions): Promise<DraftBriefRes
   } else {
     const question = templateQuestion(template, subject, entity);
     const run = await runAgent({
-      db, provider, question, signal, emit,
+      // The structuring call still has to fit in the same request, so the evidence run gets less than the chat's budget.
+      db, provider, question, signal, emit, budgetMs: BRIEF_AGENT_BUDGET_MS,
       selection: entity ? { kind: 'entity', id: entity.id, name: entity.name } : null,
     });
     if (run.error) throw new Error(run.error);

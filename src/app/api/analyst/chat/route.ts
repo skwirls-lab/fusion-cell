@@ -9,9 +9,11 @@ import { handle } from '@/lib/api';
 import { runAgent, type AgentEvent } from '@/lib/ai/agent';
 import { getProvider } from '@/lib/ai/provider';
 import { ChatRequestBody, parseBody } from '@/lib/ai/request';
+import { AGENT_BUDGET_MS } from '@/lib/ai/limits';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+// Literal on purpose: Next reads segment config statically. Keep equal to AGENT_MAX_DURATION_S.
+export const maxDuration = 300;
 
 export const POST = handle(async (req) => {
   const body = await parseBody(ChatRequestBody, req);
@@ -36,6 +38,7 @@ export const POST = handle(async (req) => {
           question: body.question,
           selection: body.selection ?? null,
           history: body.history,
+          budgetMs: AGENT_BUDGET_MS,
           signal: req.signal,
           emit: send,
         });

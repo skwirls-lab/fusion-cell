@@ -16,7 +16,8 @@ import { parseBody } from '@/lib/ai/request';
 import { DraftBriefBody } from './schemas';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 120;
+// Literal on purpose: Next reads segment config statically. Keep equal to AGENT_MAX_DURATION_S.
+export const maxDuration = 300;
 
 export const GET = handle(async () => {
   const db = await getDb();

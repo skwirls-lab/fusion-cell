@@ -146,11 +146,53 @@ describe('runAgent (scripted provider, real seeded DB)', () => {
     expect(provider.requests).toHaveLength(10);
     const forced = provider.requests[9];
     expect(forced.tools).toEqual([]);
-    expect(forced.messages.at(-1)).toMatchObject({ role: 'system' });
+    expect(forced.messages.at(-1)).toMatchObject({ role: 'user' });
     expect(forced.messages.at(-1)?.content).toMatch(/Answer now with what you have/);
     // The refused tool request never entered the transcript.
     expect(forced.messages.filter((m) => m.role === 'assistant')).toHaveLength(8);
     expect(ofType(events, 'token').map((t) => t.delta).join('')).toBe(done.answer);
+  });
+
+  it('time budget: once spent, the next turn is the forced answer and the limit reason is time', async () => {
+    const provider = new ScriptedProvider([
+      { toolCalls: [{ name: 'search_entities', args: { query: 'Varro' } }] },
+      { toolCalls: [{ name: 'search_entities', args: { query: 'Renley' } }] },
+      { text: 'Partial answer.' },
+    ]);
+    const events: AgentEvent[] = [];
+    let clock = 0;
+    const result = await runAgent({
+      db: h.db, provider, question: 'q', emit: (ev) => events.push(ev),
+      budgetMs: 700, now: () => (clock += 400), // started at 400; checked at 800 (400 elapsed: in budget), then at 1200 (800: spent)
+    });
+    expect(ofType(events, 'limit')).toEqual([{ type: 'limit', reason: 'time' }]);
+    expect(result.limited).toBe(true);
+    expect(result.steps).toBe(2);
+    expect(provider.requests).toHaveLength(3);
+    expect(provider.requests[2].tools).toEqual([]);
+    expect(result.answer).toBe('Partial answer.');
+  });
+
+  it('an empty final turn is asked for once more; the second answer is the answer', async () => {
+    const { provider, events, result } = await run([
+      { toolCalls: [{ name: 'search_reports', args: { query: 'LANTERN' } }] },
+      { text: '' },
+      { text: 'LANTERN has access to movement tables [R-0019].' },
+    ]);
+    expect(provider.requests).toHaveLength(3);
+    expect(provider.requests[2].tools).toEqual([]);
+    expect(provider.requests[2].messages.at(-1)).toMatchObject({ role: 'user' });
+    expect(provider.requests[2].messages.at(-1)?.content).toMatch(/last reply was empty/);
+    expect(result.answer).toBe('LANTERN has access to movement tables [R-0019].');
+    expect(result.citations.valid).toEqual(['R-0019']);
+    expect(ofType(events, 'error')).toEqual([]);
+  });
+
+  it('two empty turns in a row is an error, not a loop', async () => {
+    const { provider, events, result } = await run([{ text: '' }, { text: '' }]);
+    expect(provider.requests).toHaveLength(2);
+    expect(result.answer).toBe('');
+    expect(ofType(events, 'error')[0].message).toMatch(/no answer text/);
   });
 
   it('find_paths returns the evidence reports on each edge and makes them citable', async () => {

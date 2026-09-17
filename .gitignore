@@ -11,3 +11,6 @@ test-results/
 /data/.pglite/
 next-env.d.ts
 tsconfig.tsbuildinfo
+
+# eval transcripts (model output; regenerate with npm run evals)
+.evals/

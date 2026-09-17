@@ -29,7 +29,11 @@ export const SYSTEM_PROMPT = `You are an all-source intelligence analyst working
 
 /** Appended when the step limit is reached and the model must answer with what it has. */
 export const FORCE_ANSWER_NUDGE =
-  'Step limit reached. Tools are no longer available. Answer now with what you have, in the required format, citing only report numbers that appeared in tool results above. State clearly which parts of the investigation are incomplete.';
+  'Investigation budget reached. Tools are no longer available. Answer now with what you have, in the required format, citing only report numbers that appeared in tool results above. State clearly which parts of the investigation are incomplete.';
+
+/** Sent once when a turn comes back with neither text nor tool calls. */
+export const EMPTY_ANSWER_NUDGE =
+  'Your last reply was empty. Write the final answer now, in the required format, from the tool results above, citing only report numbers that appeared in them.';
 
 export interface SelectionContext {
   kind: 'entity' | 'event';

@@ -98,6 +98,11 @@ const likePattern = (q: string) => `%${q.replace(/[\\%_]/g, '\\$&')}%`;
 
 const ftsMatch = (q: string): SQL => sql`${reports.searchVector} @@ plainto_tsquery('english', ${q})`;
 const ftsRank = (q: string): SQL => sql`ts_rank(${reports.searchVector}, plainto_tsquery('english', ${q}))`;
+// The same parsed query with every AND turned into OR. plainto_tsquery emits only lexemes joined by
+// ' & ' (no operators survive from user text), so the text rewrite cannot change its meaning otherwise.
+const anyTsQuery = (q: string): SQL => sql`replace(plainto_tsquery('english', ${q})::text, ' & ', ' | ')::tsquery`;
+const ftsMatchAny = (q: string): SQL => sql`${reports.searchVector} @@ ${anyTsQuery(q)}`;
+const ftsRankAny = (q: string): SQL => sql`ts_rank(${reports.searchVector}, ${anyTsQuery(q)})`;
 
 /** name / any alias / description ILIKE q. */
 function entityTextMatch(q: string): SQL {
@@ -257,12 +262,21 @@ export async function getEntityProfile(db: Db, id: string): Promise<EntityProfil
 
 // ---- reports -----------------------------------------------------------------
 
+/**
+ * `match: 'any'` relaxes the full-text condition from "every term" to "at least one term", ranked so
+ * that reports matching more terms come first. The HTTP API never uses it (a search box that ORs is
+ * noise); the analyst's search tool does, as a backfill, because a model's natural query ("Doss
+ * Renley") returns nothing when the reports only ever say "Cmdr Renley".
+ */
 export async function listReports(
   db: Db,
   q: z.infer<typeof ReportListQuery>,
+  opts: { match?: 'all' | 'any' } = {},
 ): Promise<{ reports: ReportSummary[]; total: number }> {
+  const any = opts.match === 'any';
+  const rank = any ? ftsRankAny : ftsRank;
   const where: SQL[] = [];
-  if (q.q) where.push(ftsMatch(q.q));
+  if (q.q) where.push(any ? ftsMatchAny(q.q) : ftsMatch(q.q));
   if (q.type?.length) where.push(inArray(reports.type, q.type));
   if (q.entity) {
     where.push(
@@ -284,7 +298,7 @@ export async function listReports(
       .select()
       .from(reports)
       .where(cond)
-      .orderBy(...(q.q ? [desc(ftsRank(q.q)), desc(reports.reportedAt), desc(reports.reportNumber)] : [desc(reports.reportedAt), desc(reports.reportNumber)]))
+      .orderBy(...(q.q ? [desc(rank(q.q)), desc(reports.reportedAt), desc(reports.reportNumber)] : [desc(reports.reportedAt), desc(reports.reportNumber)]))
       .limit(q.limit)
       .offset(q.offset),
     db.select({ total: count() }).from(reports).where(cond),
