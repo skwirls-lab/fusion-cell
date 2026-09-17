@@ -1,10 +1,10 @@
 # Build State
 
-Last updated: 2026-09-17T18:00Z
-Current phase: 6 DONE and reviewed; Phase 7 (polish) next; model gates blocked
+Last updated: 2026-09-17T19:20Z
+Current phase: ALL PHASES BUILT. Definition of Done met except the model-dependent gates (B1).
 Model configured: deepseek-v4-flash-0731 (**unverified**, see B1)
-**Blocked: partially — B1 (network) blocks P0.2 smoke test, P1.6 deploy, and Phase 5 evals.
-Everything else proceeds against in-process PGlite.**
+**Blocked: only B1 (network) — P0.2 smoke test, P1.6 deploy, Phase 5 evals, and real-model
+extraction/drafting. Every other gate is green on in-process PGlite.**
 
 ## BLOCKER — B1: session cannot reach OpenRouter or Supabase
 Unchanged. See KNOWN_ISSUES.md. Resolution needs the human: allowlist the hosts for
@@ -98,3 +98,25 @@ this environment, or run the network-gated phases from a laptop.
 - [x] Motion audit (§8): tab fade, drawer collapse, toast slide-in, replayed markers grow in; all reduced-motion gated (D25)
 - [x] Gates: tsc; vitest 98/98; playwright 26/26 (zero console errors); next build
 - [ ] Empty/loading/error states audit across every panel; keyboard shortcut audit (remaining Phase 7 items)
+
+## Definition of Done (BUILD.md §10) — status at hand-off
+- [x] `npm run build` exits 0
+- [x] `npx vitest run` — 98/98
+- [x] `npx playwright test` — 26/26, zero console errors across all specs
+- [x] `check-schema` PASS · `check-seed` PASS · `check-auth` 6/6 · `check-api` 20/20 (live dev server)
+- [ ] `run-evals` ≥9/12 with LANTERN passing — **BLOCKED B1** (exits 3: network). First thing to run wherever the model is reachable.
+- [ ] `smoke-model` — **BLOCKED B1** (exits 3)
+- [ ] Deployed URL serves the app — **needs the human**: Vercel env vars (README), Supabase migrate + seed once
+- [x] Every UI value traces to a database row — verified by two fresh-context reviews (rounds 1 and 2)
+- [x] Ledgers current
+- [x] No secrets in git — `.env.local` never committed; API keys clean. One exception found by the
+      scan and recorded in KNOWN_ISSUES.md: the DB password was quoted in DECISIONS.md in commit
+      062ec3a (redacted since). **Rotate it.**
+
+## Resume instructions for a session with network access
+1. `npm run check:env` — proves the keys and DB are reachable.
+2. `npm run smoke:model` — picks the first model that can drive a tool loop; writes OPENROUTER_MODEL.
+3. `DB_DRIVER=pglite npm run seed:load && DB_DRIVER=pglite npm run evals` — the LANTERN gate.
+   If it fails, the order of suspicion is in BUILD.md Phase 5: search tool surfacing → step cap → seed density.
+4. Production DB once: `npm run migrate && npm run seed:load` with DATABASE_URL set.
+5. Push → Vercel deploys → `curl <url>/api/health` should show driver "pg", 169 entities, 80 reports.
