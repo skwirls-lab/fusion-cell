@@ -7,7 +7,7 @@
  */
 import type { Db } from '../db';
 import { existingReportNumbers } from '../db/queries';
-import type { ChatMessage, ChatProvider, ProviderEvent, ToolCallRecord, Usage } from './provider';
+import { ModelStallError, type ChatMessage, type ChatProvider, type ProviderEvent, type ToolCallRecord, type Usage } from './provider';
 import { SYSTEM_PROMPT, FORCE_ANSWER_NUDGE, EMPTY_ANSWER_NUDGE, buildUserContext, type SelectionContext } from './prompt';
 import { TOOLS, toToolSpecs, stringifyResult, type AnalystTool, type ToolContext } from './tools';
 import { DEFAULT_MAX_STEPS } from './limits';
@@ -39,6 +39,8 @@ export interface RunAgentOptions {
   maxSteps?: number;
   /** Wall-clock budget for tool turns. Once spent, the next turn is the forced final answer, so a platform time limit cuts off nothing. */
   budgetMs?: number;
+  /** Absolute wall-clock limit for the whole run, final answer included; every model call is capped to what is left of it. */
+  hardStopMs?: number;
   now?: () => number;
   temperature?: number;
   tools?: AnalystTool[];
@@ -68,8 +70,11 @@ export const CITATION_RE = /\[(R-\d{4})\]/g;
  */
 export function normalizeCitations(text: string): string {
   return text
+    // Clean groups first: "(R-0019, R-0042)", "[R-0019; R-0042]", "(R-0001 and R-0002)".
     .replace(/[\[(]\s*((?:R-\d{4}\s*[,;&]?\s*(?:and\s+)?)+)[\])]/g, (_, inner: string) => (inner.match(/R-\d{4}/g) ?? []).map((n) => `[${n}]`).join(' '))
-    .replace(/(?<![\[\w-])(R-\d{4})(?![\]\w])/g, '[$1]');
+    // Then every remaining number that is not already exactly "[R-dddd]", wherever it sits:
+    // "[R-9999, para 2]", "[see R-9998]", "R-9999]" all become chips and all face validation.
+    .replace(/\[(R-\d{4})\]|(?<![\w-])(R-\d{4})(?!\w)/g, (_, kept: string | undefined, bare: string | undefined) => `[${kept ?? bare}]`);
 }
 
 interface Turn {
@@ -106,6 +111,8 @@ export async function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
   const now = opts.now ?? Date.now;
   const startedAt = now();
   const outOfTime = () => opts.budgetMs !== undefined && now() - startedAt >= opts.budgetMs;
+  /** What a call starting now may spend before `limit` (ms since start) is reached; never less than a token effort. */
+  const remaining = (limit: number | undefined) => (limit === undefined ? undefined : Math.max(5_000, limit - (now() - startedAt)));
   const tools = opts.tools ?? TOOLS;
   const specs = toToolSpecs(tools);
   const ctx: ToolContext = { seenReportNumbers: new Set() };
@@ -148,17 +155,18 @@ export async function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
     const label = tool.label(args);
     // Seen live: a cheap model re-runs the identical call several times and burns its step budget.
     // The repeat gets a pointer instead of the same payload again (highlight_in_ui is idempotent UI state).
+    // Only successful calls are remembered: a repeat of a call that failed deserves a real second try.
     const callKey = `${tool.name}:${JSON.stringify(args)}`;
     const firstStep = callsMade.get(callKey);
     if (firstStep !== undefined && tool.name !== 'highlight_in_ui') {
       send({ type: 'trace', step, tool: tool.name, label, args, status: 'ok', ms: 0, summary: `duplicate of step ${firstStep}` });
       return JSON.stringify({ duplicate_call: true, first_made_at_step: firstStep, note: 'You already made this exact call; its result is above and has not changed. Do not repeat it. Read specific reports with get_report, follow a different lead, or write the final answer.' });
     }
-    callsMade.set(callKey, step);
     send({ type: 'trace', step, tool: tool.name, label, args, status: 'start' });
     const t0 = Date.now();
     try {
       const out = await tool.run(db, args, ctx);
+      callsMade.set(callKey, step);
       send({ type: 'trace', step, tool: tool.name, label, args, status: 'ok', ms: Date.now() - t0, summary: tool.summarize(out) });
       if (tool.name === 'highlight_in_ui') {
         const h = args as { entity_ids: string[]; event_ids: string[]; edge_ids: string[] };
@@ -181,7 +189,16 @@ export async function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
         send({ type: 'limit', reason: 'time' });
         break;
       }
-      const turn = await collectTurn(provider.complete({ messages, tools: specs, temperature: opts.temperature, signal }));
+      let turn: Turn;
+      try {
+        turn = await collectTurn(provider.complete({ messages, tools: specs, temperature: opts.temperature, signal, deadlineMs: remaining(opts.budgetMs) }));
+      } catch (e) {
+        // A tool turn that ran into the end of the budget is the budget running out, not a failure.
+        if (!(e instanceof ModelStallError && e.overran && opts.budgetMs !== undefined)) throw e;
+        result.limited = true;
+        send({ type: 'limit', reason: 'time' });
+        break;
+      }
       if (turn.usage) result.usage = turn.usage;
 
       if (!turn.toolCalls.length) {
@@ -215,7 +232,7 @@ export async function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
       // system message as text to continue (seen live: the answer opened with half the nudge).
       messages.push({ role: 'user', content: nudge });
       const turn = await collectTurn(
-        provider.complete({ messages, tools: [], temperature: opts.temperature, signal }),
+        provider.complete({ messages, tools: [], temperature: opts.temperature, signal, deadlineMs: remaining(opts.hardStopMs) }),
         (delta) => send({ type: 'token', delta }),
       );
       if (turn.usage) result.usage = turn.usage;
@@ -230,6 +247,7 @@ export async function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
     messages.push({ role: 'assistant', content: result.answer });
 
     // Citation validation: cited ⊆ (returned by a tool in this run ∩ exists in DB).
+    // After normalisation every report number in the answer is a bracketed citation; none can sit outside the check.
     const cited = [...new Set([...result.answer.matchAll(CITATION_RE)].map((m) => m[1]))];
     const existing = await existingReportNumbers(db, cited);
     result.citations = {

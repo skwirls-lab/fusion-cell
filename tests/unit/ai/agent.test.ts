@@ -3,7 +3,8 @@ import { createDb, type DbHandle } from '@/lib/db';
 import { runMigrations } from '@/lib/db/migrate';
 import { loadSeed } from '@/lib/db/seed';
 import { runAgent, normalizeCitations, type AgentEvent } from '@/lib/ai/agent';
-import { ScriptedProvider, type ScriptedTurn } from '@/lib/ai/provider';
+import { ScriptedProvider, ModelStallError, type ScriptedTurn } from '@/lib/ai/provider';
+import { TOOLS } from '@/lib/ai/tools';
 
 let h: DbHandle;
 
@@ -163,7 +164,7 @@ describe('runAgent (scripted provider, real seeded DB)', () => {
     let clock = 0;
     const result = await runAgent({
       db: h.db, provider, question: 'q', emit: (ev) => events.push(ev),
-      budgetMs: 700, now: () => (clock += 400), // started at 400; checked at 800 (400 elapsed: in budget), then at 1200 (800: spent)
+      budgetMs: 1500, now: () => (clock += 400), // every reading advances 400ms: started at 400; budget checked at 1200 (800 elapsed: in budget), then at 2000 (1600: spent)
     });
     expect(ofType(events, 'limit')).toEqual([{ type: 'limit', reason: 'time' }]);
     expect(result.limited).toBe(true);
@@ -187,10 +188,60 @@ describe('runAgent (scripted provider, real seeded DB)', () => {
     expect(ofType(events, 'trace').filter((t) => t.summary === 'duplicate of step 1')).toHaveLength(1);
   });
 
+  it('a failed tool call may be repeated: only successes are remembered as duplicates', async () => {
+    const { provider } = await run([
+      { toolCalls: [{ name: 'get_report', args: { report_number: 'R-0019' } }] },
+      { toolCalls: [{ name: 'get_report', args: { report_number: 'R-0019' } }] },
+      { text: 'done' },
+    ]);
+    const second = JSON.parse(provider.requests[2].messages.filter((m) => m.role === 'tool')[1].content as string);
+    expect(second).toMatchObject({ duplicate_call: true }); // success → remembered
+    const failing = { ...TOOLS.find((t) => t.name === 'get_report')!, run: async () => { throw new Error('db down'); } };
+    const events: AgentEvent[] = [];
+    const p2 = new ScriptedProvider([
+      { toolCalls: [{ name: 'get_report', args: { report_number: 'R-0019' } }] },
+      { toolCalls: [{ name: 'get_report', args: { report_number: 'R-0019' } }] },
+      { text: 'done' },
+    ]);
+    await runAgent({ db: h.db, provider: p2, question: 'q', tools: [failing], emit: (ev) => events.push(ev) });
+    const results = p2.requests[2].messages.filter((m) => m.role === 'tool').map((m) => JSON.parse(m.content as string));
+    expect(results).toEqual([{ error: 'tool_failed', message: 'db down' }, { error: 'tool_failed', message: 'db down' }]);
+  });
+
+  it('a tool turn that overruns its deadline ends the investigation, not the request', async () => {
+    const seen: Array<number | undefined> = [];
+    let n = 0;
+    const provider = {
+      model: 'fake',
+      async *complete(req: { deadlineMs?: number; tools: unknown[] }) {
+        seen.push(req.deadlineMs);
+        n++;
+        if (n === 1) { yield { type: 'tool_call' as const, id: 'c1', name: 'search_entities', argumentsJson: '{"query":"Varro"}' }; yield { type: 'done' as const, finishReason: 'tool_calls' }; return; }
+        if (n === 2) throw new ModelStallError('fake', 1000, true);
+        yield { type: 'text' as const, delta: 'Partial.' };
+        yield { type: 'done' as const, finishReason: 'stop' };
+      },
+    };
+    const events: AgentEvent[] = [];
+    const result = await runAgent({ db: h.db, provider, question: 'q', budgetMs: 60_000, hardStopMs: 90_000, emit: (ev) => events.push(ev) });
+    expect(result.error).toBeUndefined();
+    expect(result.limited).toBe(true);
+    expect(ofType(events, 'limit')).toEqual([{ type: 'limit', reason: 'time' }]);
+    expect(result.answer).toBe('Partial.');
+    expect(seen[0]).toBeLessThanOrEqual(60_000);
+    expect(seen[2]).toBeGreaterThan(60_000 - 5_000); // the final answer is capped by the hard stop, not the tool budget
+    expect(seen[2]).toBeLessThanOrEqual(90_000);
+  });
+
   it('citation format drift is normalised, so an unbracketed fabricated number is still caught', async () => {
     expect(normalizeCitations('a (R-0019) b R-0042, c [R-0019, R-0042] d [R-0003; R-0007] e (R-0001 and R-0002) f [R-0019]'))
       .toBe('a [R-0019] b [R-0042], c [R-0019] [R-0042] d [R-0003] [R-0007] e [R-0001] [R-0002] f [R-0019]');
-    expect(normalizeCitations('ids like per_R-0019x or XR-0019 stay')).toBe('ids like per_R-0019x or XR-0019 stay');
+    expect(normalizeCitations('ids like per_R-0019x or XR-0019 or R-00199 stay')).toBe('ids like per_R-0019x or XR-0019 or R-00199 stay');
+    // Forms a reviewer found escaping validation: a number sharing its brackets with other text.
+    for (const sneaky of ['[R-9999, para 2]', '[see R-9998]', '[R-9999: title]', '[R-0019–R-9999]', 'R-9999]']) {
+      const numbers = [...normalizeCitations(sneaky).matchAll(/\[(R-\d{4})\]/g)].map((m) => m[1]);
+      expect(numbers, sneaky).toEqual(sneaky.match(/R-\d{4}/g));
+    }
     const { result, events } = await run([
       { toolCalls: [{ name: 'search_reports', args: { query: 'LANTERN' } }] },
       { text: 'LANTERN has access (R-0019). Also see R-9999.' },

@@ -216,3 +216,41 @@ began with half of the nudge text (the nudge is now a user turn, and an empty an
 asked for once more); answers cited as `(R-0053)` or bare `R-0053` produced no chips and —
 worse — escaped citation validation entirely (all report numbers are normalised to
 `[R-xxxx]` before validation, so a fabricated unbracketed number is now caught).
+
+**D30 — Review round 3 (end of Phases 5 and 7, fresh-context reviewer).** No faked data:
+feed rows, timeline density and citation chips were traced to `reports`/`events` rows through
+the HTTP API; every `page.route` in `e2e/` fulfils a 500 and is then removed. Fixed before
+the commit: (H1) `normalizeCitations` skipped a number that shared its brackets with other
+text — `[R-9999, para 2]`, `[see R-9998]`, `R-9999]` reached neither the chip renderer nor
+the validator; every report number not already exactly `[R-dddd]` is now wrapped, and briefs
+normalise before stripping. (H2) a tool turn that overran its 150 s deadline had yielded
+nothing, so it was retried for another 150 s, past `maxDuration`; an overrun is never
+retried, every call is capped to what is left (`deadlineMs`), an overrun during a tool turn
+ends the investigation with `limit: time` instead of failing the request, and the final
+answer is capped by a hard stop (285 s chat; briefs finish evidence by 200 s so structuring
+fits). (M1) `renley-herring` got back four substrings a negation rarely wraps. (M2) only
+successful tool calls are remembered as duplicates. (M3) both SSE routes abort the run from
+`ReadableStream.cancel()` as well as `req.signal`. (L1) `--only` and `--rejudge` runs say
+they are not the gate. Accepted: the judge is the same model that answers (pin a stronger
+one with a second provider if the evals ever matter beyond this demo); `get_entity` /
+`find_paths` mark report numbers as seen, so a later search stubs a report whose snippet the
+model never saw (it can still `get_report` it); the help overlay has no focus trap.
+
+**D31 — Playwright runs on its own port (3187) and reads `APP_PASSWORD` from `.env.local`.**
+On the laptop `:3000` belongs to an unrelated Express app that answers 200 on `/api/health`;
+with `reuseExistingServer` Playwright adopted it and every login 404ed. `check-api` and
+`check-auth` take `E2E_BASE_URL`.
+
+**D32 — `vercel.json` pins `"framework": "nextjs"`.** The Vercel project was imported when the
+repo held only BUILD.md and the PRD, so the preset was not Next.js and every production
+build failed inside a minute. Could not read the build log (CLI not logged in); the
+hypothesis was tested by pushing the pin, and the next deployment succeeded.
+
+**D33 — Phase 7 states and shortcuts.** Shared `Skeleton` / `EmptyState` / `ErrorState` in
+`src/lib/client/chips.tsx` were extended (test ids, retry, a way out of an empty state)
+rather than adding a new component. All bindings live in `src/lib/client/shortcuts.ts`,
+which also renders the `?` overlay. Escape closes one layer per press: help → open menu →
+report reader → blur the field → clear the selection. Not done: a loading/error state on
+the alerts dropdown (it reads a local store), arrow-key map panning after `M`, and
+Ctrl+Enter no longer sends in the analyst box (plain Enter does). A failed feed poll still
+replaces the rows with the error state until the next poll.

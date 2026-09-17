@@ -17,9 +17,9 @@ import { z } from 'zod';
 import type { Db } from '../db';
 import { entityHeadsByIds, existingReportNumbers } from '../db/queries';
 import { BRIEF_TEMPLATES } from '../db/schema';
-import { runAgent, CITATION_RE, type AgentEvent } from './agent';
+import { runAgent, normalizeCitations, CITATION_RE, type AgentEvent } from './agent';
 import type { ChatMessage, ChatProvider } from './provider';
-import { BRIEF_AGENT_BUDGET_MS } from './limits';
+import { AGENT_HARD_STOP_MS, BRIEF_AGENT_BUDGET_MS, BRIEF_AGENT_HARD_STOP_MS } from './limits';
 
 export type BriefTemplate = (typeof BRIEF_TEMPLATES)[number];
 export const BriefTemplateSchema = z.enum(BRIEF_TEMPLATES);
@@ -178,9 +178,9 @@ function firstJsonObject(text: string): string | null {
   return start >= 0 && end > start ? text.slice(start, end + 1) : null;
 }
 
-async function completeText(provider: ChatProvider, messages: ChatMessage[], signal?: AbortSignal): Promise<string> {
+async function completeText(provider: ChatProvider, messages: ChatMessage[], signal?: AbortSignal, deadlineMs?: number): Promise<string> {
   let text = '';
-  for await (const ev of provider.complete({ messages, tools: [], temperature: 0.2, signal })) {
+  for await (const ev of provider.complete({ messages, tools: [], temperature: 0.2, signal, deadlineMs })) {
     if (ev.type === 'text') text += ev.delta;
   }
   return text;
@@ -188,6 +188,8 @@ async function completeText(provider: ChatProvider, messages: ChatMessage[], sig
 
 async function structure(
   provider: ChatProvider, analysis: string, meta: { template: BriefTemplate; subject: string; allowed: string[] }, signal?: AbortSignal,
+  /** Epoch ms by which the whole request must be over; each attempt is capped to what is left. */
+  deadlineAt?: number,
 ): Promise<BriefContent> {
   const user = [
     `Brief template: ${TEMPLATE_LABEL[meta.template]}`,
@@ -204,7 +206,7 @@ async function structure(
 
   let lastError = '';
   for (let attempt = 0; attempt < 2; attempt++) {
-    const text = await completeText(provider, messages, signal);
+    const text = await completeText(provider, messages, signal, deadlineAt === undefined ? undefined : Math.max(5_000, deadlineAt - Date.now()));
     const raw = firstJsonObject(text);
     let parsed: unknown;
     try {
@@ -226,9 +228,9 @@ async function structure(
 
 // ---- citation enforcement ----------------------------------------------------------
 
-/** Removes every [R-xxxx] chip not in `allowed` from a text field. */
+/** Removes every report number not in `allowed` from a text field, whatever form it was written in. */
 function stripCitationsInText(text: string, allowed: Set<string>, stripped: Set<string>): string {
-  return text
+  return normalizeCitations(text)
     .replace(CITATION_RE, (whole, n: string) => {
       if (allowed.has(n)) return whole;
       stripped.add(n);
@@ -309,6 +311,7 @@ const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export async function draftBrief(opts: DraftBriefOptions): Promise<DraftBriefResult> {
   const { db, provider, template, signal } = opts;
+  const startedAt = Date.now();
   const subject = opts.subject ?? {};
   const emit = opts.emit ?? (() => {});
   const date = opts.date ?? new Date().toISOString().slice(0, 10);
@@ -337,7 +340,7 @@ export async function draftBrief(opts: DraftBriefOptions): Promise<DraftBriefRes
     const question = templateQuestion(template, subject, entity);
     const run = await runAgent({
       // The structuring call still has to fit in the same request, so the evidence run gets less than the chat's budget.
-      db, provider, question, signal, emit, budgetMs: BRIEF_AGENT_BUDGET_MS,
+      db, provider, question, signal, emit, budgetMs: BRIEF_AGENT_BUDGET_MS, hardStopMs: BRIEF_AGENT_HARD_STOP_MS,
       selection: entity ? { kind: 'entity', id: entity.id, name: entity.name } : null,
     });
     if (run.error) throw new Error(run.error);
@@ -363,7 +366,7 @@ export async function draftBrief(opts: DraftBriefOptions): Promise<DraftBriefRes
   const t0 = Date.now();
   let raw: BriefContent;
   try {
-    raw = await structure(provider, analysis, { template, subject: subjectLabel, allowed: allowedList }, signal);
+    raw = await structure(provider, analysis, { template, subject: subjectLabel, allowed: allowedList }, signal, startedAt + AGENT_HARD_STOP_MS);
   } catch (e) {
     emit({ type: 'trace', step, tool: 'structure_brief', label, args: { template }, status: 'error', ms: Date.now() - t0, summary: errMsg(e) });
     throw e;

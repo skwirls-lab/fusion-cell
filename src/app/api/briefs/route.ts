@@ -35,6 +35,9 @@ export const POST = handle(async (req) => {
     return json({ error: 'invalid_request', message: 'entity_profile requires subject.entityId' }, { status: 400 });
   }
   const encoder = new TextEncoder();
+  // The reader going away must stop the draft (and the billing) even if req.signal never fires.
+  const gone = new AbortController();
+  const signal = AbortSignal.any([req.signal, gone.signal]);
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -54,7 +57,7 @@ export const POST = handle(async (req) => {
           template: body.template,
           subject: body.subject,
           seedAnswer: body.seedAnswer,
-          signal: req.signal,
+          signal,
           emit: send,
         });
         const saved = await createBrief(db, {
@@ -68,12 +71,13 @@ export const POST = handle(async (req) => {
         });
         send({ type: 'brief', id: saved.id, title: saved.title, markdown: saved.markdown });
       } catch (e) {
-        if (!req.signal.aborted) send({ type: 'error', message: e instanceof Error ? e.message : String(e) });
+        if (!signal.aborted) send({ type: 'error', message: e instanceof Error ? e.message : String(e) });
       } finally {
         open = false;
         try { controller.close(); } catch { /* already closed */ }
       }
     },
+    cancel() { gone.abort(); },
   });
 
   return new Response(stream, {

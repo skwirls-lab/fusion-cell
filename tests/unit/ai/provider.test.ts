@@ -97,6 +97,20 @@ describe('OpenRouterProvider stall guard', () => {
     expect(bodies[0].max_tokens).toBeGreaterThan(0);
   });
 
+  it('a call that overruns before yielding anything (a tool-call turn) is NOT retried', async () => {
+    const reasoningForever: Handler = (_req, res) => {
+      sseHead(res);
+      const t = setInterval(() => { if (res.destroyed) clearInterval(t); else res.write(chunk({ reasoning: 'hmm ' } as object)); }, 20);
+      res.on('close', () => clearInterval(t));
+    };
+    const { url, bodies } = await serve([reasoningForever, answers]);
+    const p = new OpenRouterProvider({ apiKey: 'test', model: 'm', baseURL: url, stallMs: 150, callDeadlineMs: 5000 });
+    const err = await drain(p.complete({ messages: [{ role: 'user', content: 'hi' }], tools: [], deadlineMs: 250 })).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ModelStallError);
+    expect((err as ModelStallError).overran).toBe(true); // the per-request deadline won over the provider default
+    expect(bodies).toHaveLength(1);
+  });
+
   it('a caller abort is not a stall and is not retried', async () => {
     const { url, bodies } = await serve([hangsSilently, answers]);
     const ac = new AbortController();

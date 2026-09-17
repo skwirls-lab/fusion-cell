@@ -1,50 +1,49 @@
 # Build State
 
-Last updated: 2026-09-17T19:45Z
-Current phase: ALL PHASES BUILT. Definition of Done met except the model-dependent gates.
-Model configured: `deepseek-v4-flash-0731` in the session env — **wrong id**: OpenRouter lists it
-as `deepseek/deepseek-v4-flash-0731` (vendor prefix). Still **unverified** (B4).
-**Blocked: B3 + B4 (this session) — P0.2 smoke test, Phase 5 evals, real-model extraction/
-drafting, and every `npm`-driven gate. Every other gate was green on PGlite in the previous session.**
+Last updated: 2026-09-17T22:30Z (laptop session)
+Current phase: ALL PHASES DONE. Definition of Done met except one item that needs the human:
+verifying the deployed URL (Vercel CLI not logged in; deployment is behind Vercel SSO).
+Model in use: `deepseek/deepseek-v4-flash-0731` (verified Phase 0, first candidate, no substitution),
+thinking off by default (D27).
+Blocked: no. B1–B4 from the remote sandbox do not apply on the laptop and are closed.
 
-## BLOCKERS (session of 2026-09-17T19:30Z — fresh container)
-- **B1 — partly lifted.** `openrouter.ai` is now reachable (GET /models → 200, 445 models).
-  The Supabase session pooler (`aws-0-us-east-2.pooler.supabase.com:5432`) is still
-  unreachable: the egress proxy carries HTTPS only, and Postgres is raw TCP. PGlite remains
-  the only database here.
-- **B3 — `registry.npmjs.org` is denied by this session's egress policy** (`x-deny-reason:
-  host_not_allowed`, direct and via proxy; yarnpkg, npmmirror, jsdelivr, unpkg, esm.sh all
-  denied too). `npm ci` cannot run; the npm cache holds 8 of the 417 lockfile tarballs; no
-  copy of any dependency exists on disk. **Nothing in `package.json` scripts can run** — no
-  tsx, vitest, playwright, next. The previous session evidently had registry access.
-- **B4 — `OPENROUTER_API_KEY` in the session environment is a placeholder**: 12 bytes,
-  `sk-or-v1-` followed by a literal Unicode ellipsis (U+2026). OpenRouter's `/auth/key`
-  answers 401 "Malformed authentication credential … stray unicode". It was pasted from a
-  redacted display. `check-env.ts` and `smoke-model-raw.mjs` now fail loudly on this.
-Resolution needs the human: (1) paste the full ASCII key into the environment, (2) set
-`OPENROUTER_MODEL=deepseek/deepseek-v4-flash-0731`, (3) allowlist `registry.npmjs.org` for
-this environment — or run the gates from a laptop.
+## Laptop session summary (2026-09-17)
+- P0.1d check-env PASS (Postgres 17.6 reachable, 445 models, configured model listed). P0.2 smoke-model PASS 5/5.
+- Offline gates re-run green on this machine: tsc, next build, vitest, PGlite seed + check-seed.
+- **P5 GATE GREEN against the real model:** run-evals 10/12 then 11/12 (after review fixes), LANTERN
+  passing both times, under a stricter scorer than the one the gate was written with (D28).
+  What it took is in D27–D30; none of it was a prompt edit.
+- e2e with the real model, no seams: P5.4 / P5.6 / P5.7 (`e2e/analyst.spec.ts`), Phase 6 ingest
+  extraction → review → commit and brief drafting (`e2e/model.spec.ts`).
+- Supabase: `migrate` applied 0001 + 0002, `seed:load` 169 / 441 / 80 / 165; `check-schema` and
+  `check-seed` PASS on driver `pg`. (The public schema was empty beforehand.)
+- Vercel: CLI not installed / not logged in, so deploy-by-CLI and env vars were skipped as
+  instructed. The repo's Git integration had been failing every production build; pinning the
+  framework in `vercel.json` fixed it (D32) and the deployment for HEAD reports success. Its
+  `/api/health` could not be checked from here: all project URLs redirect to Vercel SSO.
+- Phase 7 finished: empty/loading/error states on every panel, shortcut audit (D33).
+- Review round 3 by a fresh subagent: no faked data; H1 H2 M1 M2 M3 L1 fixed (D30).
 
-## Phase 0 — Preflight  [PARTIAL]
+## Phase 0 — Preflight  [DONE]
 - [x] P0.1a Credentials written to .env.local (DB password `@` encoded as %40)   attempts: 1
 - [x] P0.1b .env.local gitignored                                              attempts: 1
 - [x] P0.1c scripts/check-env.ts                                               attempts: 2
-- [ ] P0.1d check-env.ts passes                                                BLOCKED B1 (DB TCP) + B3 (no tsx) + B4 (key)
+- [x] P0.1d check-env.ts passes (laptop)                                       attempts: 1
       note: now also rejects non-ASCII/short keys and unprefixed model ids (the exact failures seen)
-- [ ] P0.2  scripts/smoke-model.ts — model tool-calling verified               BLOCKED B3 (no node_modules) + B4 (key)     attempts: 1
+- [x] P0.2  scripts/smoke-model.ts — 5/5 on deepseek/deepseek-v4-flash-0731     attempts: 2 (1 blocked in the sandbox, 1 on the laptop)
       note: `scripts/smoke-model-raw.mjs` (D26) runs the same 5 checks with zero deps; ran here →
       exit 2 on the placeholder key. With a fake ASCII key the request reaches OpenRouter (401),
       so the transport works; only the credential is missing.
 - [x] P0.3  Ledgers + CLAUDE.md (Next 16 auto-generates CLAUDE.md → AGENTS.md)  attempts: 1
 
-## Phase 1 — Foundation  [DONE except deploy]
+## Phase 1 — Foundation  [DONE; deployed health check needs the human]
 - [x] P1.1 Next 16 scaffold, `next build` green                                attempts: 3
       note: duplicate viewport key in playwright.config; generic constraint in check-seed
 - [x] P1.2 Schema + migration — check-schema PASS (PGlite)                     attempts: 1
 - [x] P1.3 Password proxy — check-auth 6/6                                     attempts: 1 (subagent)
 - [x] P1.4 /api/health real DB round-trip                                      attempts: 1 (subagent)
 - [x] P1.5 App shell + banners — e2e/shell.spec.ts 1/1, zero console errors    attempts: 1 (subagent)
-- [ ] P1.6 Vercel deploy + env vars                                            BLOCKED B1 (human: Vercel auto-deploys on push; env vars must be set in the Vercel project — list in README)
+- [~] P1.6 Vercel deploy + env vars                                            build fixed (D32), deployment = success; env vars and the /api/health check need `vercel login` (KNOWN_ISSUES)
 
 ## Phase 2 — Data  [DONE]
 - [x] P2.1 data/story-bible.md                                                 attempts: 1
@@ -72,7 +71,7 @@ this environment — or run the gates from a laptop.
 - [x] Review round 1 (§4): H1 H2 H3 M1 M3 M4 L2 L3 L5 L6 fixed; M5 L1 L7 accepted (D14)
 - [x] P4 gate: e2e/views.spec.ts 8/8 + shell 1/1, zero console errors         attempts: 2
 
-## Phase 5 — AI analyst  [BUILT; model gates BLOCKED B1]
+## Phase 5 — AI analyst  [DONE]
 - [x] P5.1 provider (OpenRouter + ScriptedProvider)                            attempts: 1 (subagent)
 - [x] P5.2 nine tools over queries.ts, Zod→JSON schema, seen-report tracking   (D9)
 - [x] P5.3 agent loop, 8-step cap, forced final answer, audit transcript       (D10, D11)
@@ -81,20 +80,22 @@ this environment — or run the gates from a laptop.
 - [x] P5.6 highlight_in_ui → `ui` event → store.aiHighlights                   unit-tested
 - [x] P5.7 AnalystPanel: trace, chips → reader, invalid chips, prefill, Stop    browser-checked with canned SSE
 - [x] Unit: tests/unit/ai 19/19 over the REAL seed in in-memory PGlite (50/50 total)
-- [x] scripts/smoke-model.ts written — candidate list now tries the vendor-prefixed id first   BLOCKED B3 + B4
-- [x] scripts/run-evals.ts written                                             BLOCKED B3 + B4
-- [ ] P5 GATE: run-evals ≥9/12 with LANTERN passing                            BLOCKED B3 + B4 — **the real model has never been called**
-- [ ] e2e for P5.4/5.6/5.7 with a real model (testids are in place)            BLOCKED B3 + B4
+- [x] P5 GATE: run-evals 10/12, then 11/12 after review fixes; LANTERN passing   attempts: 2
+      attempt 1: hung >10 min on a silent stream (no stall guard) with the model's default thinking; killed
+      attempt 2: thinking off + search/snippet/duplicate/citation fixes + judged rubric → PASS
+- [x] e2e for P5.4/5.6/5.7 with the real model: e2e/analyst.spec.ts 3/3        attempts: 2 (the reader overlay intercepted a click in the spec)
 
 ## Decisions deferred to the human
-- Where to run the network-gated gates (allowlist here vs laptop). See B1/B3.
-- Supply a real `OPENROUTER_API_KEY` and the prefixed `OPENROUTER_MODEL` (B4).
+- `vercel login`, set env vars, lift Deployment Protection (or add a domain), check `/api/health`.
+- Choose a real `APP_PASSWORD` for the deployment; rotate the Supabase DB password (KNOWN_ISSUES).
 
 ## Anti-thrash log
 - P0.1c/2: dotenv path — root-caused, no thrash.
 - P2.2/2: density — measured, targeted fix.
 - P2 gate/2: case-sensitive keyword check + zero-participant IMINT events — both real.
 - Dev-server runs/4: exit 144 traced to kill commands, not the server (D8).
+- P5 gate/2: attempt 1 hung; diagnosed by timing each turn (thinking tokens), then BUILD.md's order: search surfacing (found: ANDed FTS, header snippets) → step cap (kept; time budget added) → seed (read, adequate). No prompt edits.
+- e2e model specs/2: both failures were in the specs (a locator that cannot see input values; a click under the reader overlay), not the app. One brief draft hung once at "Structuring" and did not reproduce; bounded anyway (output cap + per-call deadline).
 
 ## Phase 6 — Ingest and briefs  [DONE]
 - [x] Prep: `briefs` table + migration 0002, check-schema updated, reseed truncates briefs, nav → real links
@@ -107,40 +108,39 @@ this environment — or run the gates from a laptop.
 - [x] Review round 2 (§4): H1 H2 M1 M2 M3 M4 M5 L4 fixed (D20, D21); L1 L2 L3 L5 L6 verified fine
 - [x] Gates: tsc; vitest 89/89; playwright 22/22 (zero console errors); next build
 - note: each model-facing flow has a dev-only `manual` seam (404 in production) so the human-review
-  half is e2e-tested honestly; real-model extraction/drafting remain unverified (B1).
+  half is e2e-tested deterministically; real-model extraction and drafting are covered by e2e/model.spec.ts (2/2).
 - reported_at is now analyst-set in the review header, default event_at ?? now (D21)
-- note: real-model extraction/drafting cannot be exercised here (B1); each flow gets a
-  dev-only `manual` seam (404 in production) so review/commit/edit UIs are e2e-tested honestly.
 
-## Phase 7 — Polish  [IN_PROGRESS]
+## Phase 7 — Polish  [DONE]
 - [x] Timeline scrubber + replay (MAP-7, §5.5): density strip, play/pause, 1×/4×/12×, reset, replay from day 1, Space toggle, reduced-motion stepping; clock follows the cursor (D23)   unit 5, e2e 3
 - [x] Watchlist + alerts (§5.10): profile star, feed detection on arrival/replay, toasts, bell badge + dropdown, localStorage (D24)   unit 4, e2e 1
 - [x] Motion audit (§8): tab fade, drawer collapse, toast slide-in, replayed markers grow in; all reduced-motion gated (D25)
 - [x] Gates: tsc; vitest 98/98; playwright 26/26 (zero console errors); next build
-- [ ] Empty/loading/error states audit across every panel; keyboard shortcut audit (remaining Phase 7 items)
+- [x] Empty/loading/error states on every panel; keyboard shortcut audit + `?` overlay (D33)   unit 16, e2e 4 (subagent)
+- [x] Gates (final): tsc; vitest 139/139; playwright 35/35 (zero console errors); next build
 
-## Definition of Done (BUILD.md §10) — status at hand-off
-- [x] `npm run build` exits 0
-- [x] `npx vitest run` — 98/98
-- [x] `npx playwright test` — 26/26, zero console errors across all specs
-- [x] `check-schema` PASS · `check-seed` PASS · `check-auth` 6/6 · `check-api` 20/20 (live dev server)
-- [ ] `run-evals` ≥9/12 with LANTERN passing — **BLOCKED B3 + B4**. First thing to run wherever deps install and a real key exists.
-- [ ] `smoke-model` — **BLOCKED B3 + B4** (raw twin ran: key is a placeholder)
-- [ ] Deployed URL serves the app — **needs the human**: Vercel env vars (README), Supabase migrate + seed once
-- [x] Every UI value traces to a database row — verified by two fresh-context reviews (rounds 1 and 2)
+## Definition of Done (BUILD.md §10) — final status
+- [x] `npm run build` exits 0 (also from a clean `git archive` checkout with no env file)
+- [x] `npx vitest run` — 139/139
+- [x] `npx playwright test` — 35/35, five of them against the real model, zero console errors
+- [x] `check-seed` PASS on PGlite and on Supabase (`pg`)
+- [x] `check-api` 20/20 · `check-auth` PASS · `check-schema` PASS (both drivers)
+- [x] `run-evals` — 11/12 (previous run 10/12), LANTERN passing
+- [~] Deployed URL serves the app behind the password — Vercel reports the deployment for HEAD
+      as successful; the URL is behind Vercel SSO and the CLI is not logged in, so neither the
+      password page nor `/api/health` could be fetched. **Needs the human** (KNOWN_ISSUES).
+- [x] Every UI value traces to a database row — third fresh-context review (D30): feed rows,
+      timeline density and citation chips traced to rows; e2e intercepts only simulate failures
 - [x] Ledgers current
-- [x] No secrets in git — `.env.local` never committed; API keys clean. One exception found by the
-      scan and recorded in KNOWN_ISSUES.md: the DB password was quoted in DECISIONS.md in commit
-      062ec3a (redacted since). **Rotate it.**
+- [x] No secrets in git — history scanned for OpenRouter keys, JWTs and credentialed Postgres
+      URLs: none; `.env.local` never committed. Standing exception: the DB password quoted in
+      062ec3a (KNOWN_ISSUES). **Rotate it.**
 
-## Resume instructions for a session with network access
-0. `node scripts/smoke-model-raw.mjs` — needs nothing installed; proves the key and the model
-   before spending time on anything else. Exit 2 with a "malformed key" line means B4 still holds.
-1. `npm ci && npm run check:env` — proves the keys and DB are reachable (B3 must be lifted).
-2. `npm run smoke:model` — picks the first model that can drive a tool loop; writes OPENROUTER_MODEL.
-   Note: an `OPENROUTER_MODEL` already set in the process environment overrides `.env.local`
-   (dotenv and Next.js both keep existing vars) — fix it at the source, not only in the file.
-3. `DB_DRIVER=pglite npm run seed:load && DB_DRIVER=pglite npm run evals` — the LANTERN gate.
-   If it fails, the order of suspicion is in BUILD.md Phase 5: search tool surfacing → step cap → seed density.
-4. Production DB once: `npm run migrate && npm run seed:load` with DATABASE_URL set.
-5. Push → Vercel deploys → `curl <url>/api/health` should show driver "pg", 169 entities, 80 reports.
+## Resume instructions
+1. `npx vercel login`, then `npx vercel env ls` — add what the README table lists that is missing
+   (Production + Preview). `OPENROUTER_REASONING` can stay unset.
+2. Lift Deployment Protection for Production or add a domain; `curl <url>/api/health` should show
+   `driver: "pg"`, 169 entities, 80 reports, the model id.
+3. Ask the deployed analyst the LANTERN question once; it should answer in under two minutes.
+4. `DB_DRIVER=pglite npm run evals` is the Phase 5 gate (about 12 minutes, a few cents).
+   `npx playwright test` runs everything on port 3187, real-model specs included.

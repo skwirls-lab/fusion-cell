@@ -50,6 +50,8 @@ export interface CompleteRequest {
   temperature?: number;
   /** Stop tears down the HTTP stream too, so tokens stop being billed mid-turn. */
   signal?: AbortSignal;
+  /** Cap on this call's wall-clock, when the caller has less than CALL_DEADLINE_MS left. */
+  deadlineMs?: number;
 }
 
 export interface ChatProvider {
@@ -120,7 +122,7 @@ export const MAX_OUTPUT_TOKENS = 6000;
 export const CALL_DEADLINE_MS = 150_000;
 
 export class ModelStallError extends Error {
-  constructor(model: string, ms: number, overran = false) {
+  constructor(model: string, ms: number, readonly overran = false) {
     super(overran
       ? `The model (${model}) was still generating after ${Math.round(ms / 1000)}s; the call was abandoned.`
       : `The model (${model}) sent nothing for ${Math.round(ms / 1000)}s; the stream was abandoned.`);
@@ -167,7 +169,8 @@ export class OpenRouterProvider implements ChatProvider {
         }
         return;
       } catch (e) {
-        if (!(e instanceof ModelStallError) || yielded || attempt >= 1 || req.signal?.aborted) throw e;
+        // A call that ran out its deadline is never retried: the second try would start with no time left.
+        if (!(e instanceof ModelStallError) || e.overran || yielded || attempt >= 1 || req.signal?.aborted) throw e;
       }
     }
   }
@@ -180,7 +183,8 @@ export class OpenRouterProvider implements ChatProvider {
     let stalled = false;
     let overran = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const deadline = setTimeout(() => { stalled = true; overran = true; ac.abort(); }, this.callDeadlineMs);
+    const deadlineMs = Math.min(this.callDeadlineMs, req.deadlineMs ?? Infinity);
+    const deadline = setTimeout(() => { stalled = true; overran = true; ac.abort(); }, deadlineMs);
     const arm = () => {
       clearTimeout(timer);
       timer = setTimeout(() => { stalled = true; ac.abort(); }, this.stallMs);
@@ -226,7 +230,7 @@ export class OpenRouterProvider implements ChatProvider {
         if (choice.finish_reason) finishReason = choice.finish_reason;
       }
     } catch (e) {
-      if (stalled) throw new ModelStallError(this.model, overran ? this.callDeadlineMs : this.stallMs, overran);
+      if (stalled) throw new ModelStallError(this.model, overran ? deadlineMs : this.stallMs, overran);
       throw e;
     } finally {
       clearTimeout(timer);
@@ -234,7 +238,7 @@ export class OpenRouterProvider implements ChatProvider {
       req.signal?.removeEventListener('abort', onOuterAbort);
     }
     // The SDK ends an aborted stream without throwing; a cut-off turn must never read as a finished one.
-    if (stalled) throw new ModelStallError(this.model, overran ? this.callDeadlineMs : this.stallMs, overran);
+    if (stalled) throw new ModelStallError(this.model, overran ? deadlineMs : this.stallMs, overran);
     if (ac.signal.aborted) throw new Error('aborted');
 
     for (const [index, tc] of [...pending.entries()].sort((a, b) => a[0] - b[0])) {

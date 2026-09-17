@@ -9,7 +9,7 @@ import { handle } from '@/lib/api';
 import { runAgent, type AgentEvent } from '@/lib/ai/agent';
 import { getProvider } from '@/lib/ai/provider';
 import { ChatRequestBody, parseBody } from '@/lib/ai/request';
-import { AGENT_BUDGET_MS } from '@/lib/ai/limits';
+import { AGENT_BUDGET_MS, AGENT_HARD_STOP_MS } from '@/lib/ai/limits';
 
 export const dynamic = 'force-dynamic';
 // Literal on purpose: Next reads segment config statically. Keep equal to AGENT_MAX_DURATION_S.
@@ -18,6 +18,9 @@ export const maxDuration = 300;
 export const POST = handle(async (req) => {
   const body = await parseBody(ChatRequestBody, req);
   const encoder = new TextEncoder();
+  // The reader going away must stop the agent (and the billing) even if req.signal never fires.
+  const gone = new AbortController();
+  const signal = AbortSignal.any([req.signal, gone.signal]);
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -39,7 +42,8 @@ export const POST = handle(async (req) => {
           selection: body.selection ?? null,
           history: body.history,
           budgetMs: AGENT_BUDGET_MS,
-          signal: req.signal,
+          hardStopMs: AGENT_HARD_STOP_MS,
+          signal,
           emit: send,
         });
       } catch (e) {
@@ -50,6 +54,7 @@ export const POST = handle(async (req) => {
         try { controller.close(); } catch { /* already closed */ }
       }
     },
+    cancel() { gone.abort(); },
   });
 
   return new Response(stream, {

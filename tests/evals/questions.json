@@ -104,7 +104,12 @@
         "R-0049"
       ]
     ],
-    "mustNotClaim": [],
+    "mustNotClaim": [
+      "Renley is likely LANTERN",
+      "Renley is probably LANTERN",
+      "Renley is the leading candidate",
+      "Renley is the most likely"
+    ],
     "rubric": {
       "mustConclude": "The answer judges that the available evidence does NOT support Doss Renley being involved in leaking convoy schedules (for example: no evidence, unlikely, his Kestrel travel was official or legitimate business with Halloway & Sons), even if it notes that he had schedule access.",
       "mustNotConclude": "The answer assesses Renley as likely, probably, or the leading candidate to be the leaker or LANTERN."

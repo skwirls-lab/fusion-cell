@@ -8,4 +8,8 @@ export const RESULT_CHAR_CAP = 12_000;
  */
 export const AGENT_MAX_DURATION_S = 300;
 export const AGENT_BUDGET_MS = 200_000;
-export const BRIEF_AGENT_BUDGET_MS = 150_000;
+/** Everything, final answer included, must be over by here: 15 s short of maxDuration. */
+export const AGENT_HARD_STOP_MS = 285_000;
+export const BRIEF_AGENT_BUDGET_MS = 140_000;
+/** The brief's evidence run must be finished by here so the structuring call (and one retry) still fits. */
+export const BRIEF_AGENT_HARD_STOP_MS = 200_000;

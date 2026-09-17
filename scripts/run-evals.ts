@@ -145,6 +145,7 @@ if (rejudge) {
     const v = await judge(q, r.answer);
     console.log(`${v.pass ? 'PASS' : 'FAIL'}  ${r.id}  ${v.reason}`);
   }
+  console.log('\nREJUDGE ONLY — this is not the phase gate');
   await h.close();
   process.exit(0);
 }
@@ -206,5 +207,5 @@ console.log(`total: ${passed}/${rows.length} passed${requiredFailed.length ? ` �
 
 const threshold = only ? rows.length : 9;
 const ok = passed >= Math.min(threshold, rows.length) && requiredFailed.length === 0;
-console.log(ok ? '\nEVALS PASS' : `\nEVALS FAIL — need ≥ ${threshold}/${rows.length} with every required question passing`);
+console.log(ok ? (only ? `\nPARTIAL RUN PASS (--only ${only}) — this is not the phase gate` : '\nEVALS PASS') : `\nEVALS FAIL — need ≥ ${threshold}/${rows.length} with every required question passing`);
 process.exit(ok ? 0 : 1);
