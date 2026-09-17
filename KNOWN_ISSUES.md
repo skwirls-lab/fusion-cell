@@ -1,7 +1,14 @@
 # Known Issues
 
-- **B1 (blocking):** this remote session's egress policy denies `openrouter.ai`
-  and `*.supabase.co`. See BUILD_STATE.md. Not an application defect.
+- **B1 (partly lifted 2026-09-17):** `openrouter.ai` is reachable from the remote
+  session now; the Supabase pooler still is not (raw Postgres TCP, proxy is HTTPS-only).
+  See BUILD_STATE.md. Not an application defect.
+- **B3 (blocking, this session):** `registry.npmjs.org` and every mirror are denied by the
+  egress policy, so `npm ci` cannot run and no package script can execute. Not an
+  application defect; allowlist the registry or run gates from a laptop.
+- **B4 (blocking):** the `OPENROUTER_API_KEY` in the remote environment is a redacted
+  placeholder (`sk-or-v1-` + U+2026). `check-env.ts` and `smoke-model-raw.mjs` detect it.
+  The `OPENROUTER_MODEL` there also lacks the `deepseek/` vendor prefix OpenRouter requires.
 - **B2 (sandbox only):** commands containing `pkill`/`kill` exit 144 silently in this
   remote session. See DECISIONS.md D8. Irrelevant on a laptop.
 - **Root commit authorship:** `928f330` is authored as john@skwirls.com; the stop hook

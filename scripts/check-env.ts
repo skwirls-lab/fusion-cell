@@ -25,6 +25,17 @@ for (const key of REQUIRED) {
 if (process.env.DATABASE_URL?.includes('[YOUR-PASSWORD]')) {
   fail.push('DATABASE_URL still contains the [YOUR-PASSWORD] placeholder');
 }
+// A key pasted from a redacted display ("sk-or-v1-…") passes a presence check and
+// fails every request with a ByteString error deep inside fetch. Catch it here.
+const key = process.env.OPENROUTER_API_KEY ?? '';
+if (key && /[^\x21-\x7e]/.test(key)) {
+  fail.push(`OPENROUTER_API_KEY contains characters that cannot be sent in an HTTP header (length ${key.length}); re-copy the full key`);
+} else if (key && key.length < 32) {
+  fail.push(`OPENROUTER_API_KEY looks truncated (length ${key.length})`);
+}
+if (process.env.OPENROUTER_MODEL && !process.env.OPENROUTER_MODEL.includes('/')) {
+  fail.push(`OPENROUTER_MODEL "${process.env.OPENROUTER_MODEL}" has no vendor prefix; OpenRouter ids look like deepseek/deepseek-v4-flash-0731`);
+}
 
 if (fail.length) {
   console.error('FAIL\n' + fail.map((f) => `  - ${f}`).join('\n'));

@@ -155,3 +155,15 @@ sequence already existed and were gated; added a 160ms tab fade, a 200ms drawer
 collapse, a toast slide-in and a 250ms grow-in for map events revealed by the
 replay. All collapse under `prefers-reduced-motion`; the cursor then steps on
 the 2-hour grid instead of moving per frame.
+
+**D26 — A dependency-free twin of the smoke test, `scripts/smoke-model-raw.mjs`.** This
+session could reach OpenRouter but not the npm registry (B3), so `smoke-model.ts` (openai
+SDK, zod, dotenv) could not even load. The twin runs the same five checks against the same
+endpoint with Node's fetch and hand-parsed SSE, needs nothing installed, and is what a
+human should run first from any machine. It is explicitly *not* the P0.2 gate: it does
+not exercise `src/lib/ai/provider.ts`. Both scripts now try `OPENROUTER_MODEL` as given,
+then with the `deepseek/` vendor prefix (OpenRouter's `/models` lists
+`deepseek/deepseek-v4-flash-0731`, not the bare id from D4), then three fallbacks that
+were confirmed present in `/models` on 2026-09-17. The env template and README carry the
+prefixed id. The key check in `check-env.ts` rejects non-ASCII or short keys because the
+one failure actually observed was a key pasted from a redacted display.
