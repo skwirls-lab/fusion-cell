@@ -61,6 +61,17 @@ export interface AgentResult {
 export { DEFAULT_MAX_STEPS };
 export const CITATION_RE = /\[(R-\d{4})\]/g;
 
+/**
+ * Models drift from the [R-0042] format: "(R-0042)", "R-0042", "[R-0019, R-0042]", "[R-0019; R-0042]".
+ * Every report number in the answer is a citation and must face validation, so they are all rewritten
+ * to the canonical form. Without this an unbracketed fabricated number would escape the check entirely.
+ */
+export function normalizeCitations(text: string): string {
+  return text
+    .replace(/[\[(]\s*((?:R-\d{4}\s*[,;&]?\s*(?:and\s+)?)+)[\])]/g, (_, inner: string) => (inner.match(/R-\d{4}/g) ?? []).map((n) => `[${n}]`).join(' '))
+    .replace(/(?<![\[\w-])(R-\d{4})(?![\]\w])/g, '[$1]');
+}
+
 interface Turn {
   text: string;
   deltas: string[];
@@ -99,6 +110,7 @@ export async function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
   const specs = toToolSpecs(tools);
   const ctx: ToolContext = { seenReportNumbers: new Set() };
   const trace: TraceEvent[] = [];
+  const callsMade = new Map<string, number>();
   const messages: ChatMessage[] = [
     { role: 'system', content: SYSTEM_PROMPT },
     ...(opts.history ?? []).map((h): ChatMessage => ({ role: h.role, content: h.content })),
@@ -134,6 +146,15 @@ export async function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
     }
     const args = parsed.data;
     const label = tool.label(args);
+    // Seen live: a cheap model re-runs the identical call several times and burns its step budget.
+    // The repeat gets a pointer instead of the same payload again (highlight_in_ui is idempotent UI state).
+    const callKey = `${tool.name}:${JSON.stringify(args)}`;
+    const firstStep = callsMade.get(callKey);
+    if (firstStep !== undefined && tool.name !== 'highlight_in_ui') {
+      send({ type: 'trace', step, tool: tool.name, label, args, status: 'ok', ms: 0, summary: `duplicate of step ${firstStep}` });
+      return JSON.stringify({ duplicate_call: true, first_made_at_step: firstStep, note: 'You already made this exact call; its result is above and has not changed. Do not repeat it. Read specific reports with get_report, follow a different lead, or write the final answer.' });
+    }
+    callsMade.set(callKey, step);
     send({ type: 'trace', step, tool: tool.name, label, args, status: 'start' });
     const t0 = Date.now();
     try {
@@ -205,7 +226,7 @@ export async function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
     // Seen live: a turn that ends with no text and no tool calls. Ask once more rather than fail the question.
     if (!finalTurn.text.trim()) finalTurn = await answerWithoutTools(EMPTY_ANSWER_NUDGE);
 
-    result.answer = finalTurn.text.trim();
+    result.answer = normalizeCitations(finalTurn.text.trim());
     messages.push({ role: 'assistant', content: result.answer });
 
     // Citation validation: cited ⊆ (returned by a tool in this run ∩ exists in DB).

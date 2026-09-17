@@ -75,6 +75,42 @@ export function serializeReportSummary(row: ReportRow, entityIds: string[]): Rep
   };
 }
 
+/**
+ * The passages of a report body that mention the query's words, for the analyst's search tool. The
+ * default snippet is the first SNIPPET_LEN characters, which for most reports is the DTG header —
+ * the line that matched the search (and that a reader would judge relevance by) is further down.
+ * Matching is by word prefix (first 5 letters) so "schedules" finds "schedule".
+ */
+export function focusedSnippet(body: string, query: string, maxLen: number): string {
+  const stems = [...new Set(query.toLowerCase().match(/[a-z0-9]{3,}/g) ?? [])].map((w) => w.slice(0, 5));
+  // Lines, not sentences: these reports are line-structured and full of abbreviations ("Cmdr D. RENLEY").
+  const passages = body.split(/\n+/).map((t) => t.trim()).filter(Boolean);
+  const scored = passages
+    .map((text, i) => {
+      const words = text.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+      return { text, i, hits: stems.filter((st) => words.some((w) => w.startsWith(st))).length };
+    })
+    .filter((p) => p.hits > 0)
+    .sort((a, b) => b.hits - a.hits || a.i - b.i);
+  if (!scored.length) return body.slice(0, maxLen);
+  const picked: typeof scored = [];
+  let used = 0;
+  for (const p of scored) {
+    if (used + p.text.length > maxLen && picked.length) continue;
+    picked.push(p);
+    used += p.text.length + 3;
+    if (used >= maxLen) break;
+  }
+  if (picked.length === 1 && picked[0].text.length > maxLen) {
+    // One long line: window it around the first matching word.
+    const t = picked[0].text;
+    const at = Math.max(0, t.toLowerCase().search(new RegExp(`\\b(${stems.join('|')})`)));
+    const start = Math.max(0, Math.min(at - Math.floor(maxLen / 4), t.length - maxLen));
+    return (start > 0 ? '…' : '') + t.slice(start, start + maxLen - 1);
+  }
+  return picked.sort((a, b) => a.i - b.i).map((p) => p.text).join(' … ').slice(0, maxLen);
+}
+
 export function serializeEvent(row: EventRow, entityIds: string[], reportIds: string[]): Event {
   return {
     id: row.id,
@@ -271,7 +307,7 @@ export async function getEntityProfile(db: Db, id: string): Promise<EntityProfil
 export async function listReports(
   db: Db,
   q: z.infer<typeof ReportListQuery>,
-  opts: { match?: 'all' | 'any' } = {},
+  opts: { match?: 'all' | 'any'; focusSnippet?: number } = {},
 ): Promise<{ reports: ReportSummary[]; total: number }> {
   const any = opts.match === 'any';
   const rank = any ? ftsRankAny : ftsRank;
@@ -303,7 +339,12 @@ export async function listReports(
       .offset(q.offset),
     db.select({ total: count() }).from(reports).where(cond),
   ]);
-  return { reports: await hydrateReportSummaries(db, rows), total };
+  const summaries = await hydrateReportSummaries(db, rows);
+  if (q.q && opts.focusSnippet) {
+    const bodies = new Map(rows.map((r) => [r.id, r.body]));
+    for (const r of summaries) r.snippet = focusedSnippet(bodies.get(r.id) ?? '', q.q, opts.focusSnippet);
+  }
+  return { reports: summaries, total };
 }
 
 export async function getReport(db: Db, idOrNumber: string): Promise<Report | null> {

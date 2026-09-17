@@ -32,7 +32,7 @@ import fs from 'node:fs';
 import { z } from 'zod';
 import { createDb } from '../src/lib/db/index';
 import { runAgent, type AgentEvent } from '../src/lib/ai/agent';
-import { getProvider, isNetworkBlocked, type ChatProvider } from '../src/lib/ai/provider';
+import { getProvider, isNetworkBlocked, DEFAULT_REASONING, type ChatProvider } from '../src/lib/ai/provider';
 
 const Question = z.object({
   id: z.string(),
@@ -187,7 +187,7 @@ await h.close();
 
 fs.mkdirSync('.evals', { recursive: true });
 const dumpPath = `.evals/${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-fs.writeFileSync(dumpPath, JSON.stringify({ model: provider.model, reasoning: process.env.OPENROUTER_REASONING ?? 'default', driver: h.driver, results: dump }, null, 2));
+fs.writeFileSync(dumpPath, JSON.stringify({ model: provider.model, reasoning: process.env.OPENROUTER_REASONING ?? DEFAULT_REASONING, driver: h.driver, results: dump }, null, 2));
 console.log(`\nanswers and traces: ${dumpPath}`);
 
 const passed = rows.filter((r) => r.pass).length;

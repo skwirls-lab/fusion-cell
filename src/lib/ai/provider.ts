@@ -67,6 +67,7 @@ export interface OpenRouterOptions {
   reasoning?: string;
   /** Silence tolerated on a stream before it is abandoned (default STALL_MS). */
   stallMs?: number;
+  callDeadlineMs?: number;
 }
 
 /**
@@ -75,6 +76,13 @@ export interface OpenRouterOptions {
  * else (or unset) leaves the model's default. Thinking tokens are the bulk of
  * each tool turn's wall-clock, which matters under a serverless time limit.
  */
+/**
+ * Measured on the 12 eval questions with deepseek/deepseek-v4-flash-0731 (DECISIONS.md D27): with the
+ * model's default thinking one question took 3–13 minutes; with it off, 25–150 s at the same pass rate.
+ * Set OPENROUTER_REASONING=default to hand the choice back to the model.
+ */
+export const DEFAULT_REASONING = 'off';
+
 export function reasoningParam(setting: string | undefined): Record<string, unknown> | undefined {
   const v = setting?.trim().toLowerCase();
   if (v === 'off' || v === 'none') return { enabled: false };
@@ -102,10 +110,20 @@ function toOpenAiMessage(m: ChatMessage): ChatCompletionMessageParam {
 
 /** How long a stream may stay silent before it is treated as hung. */
 export const STALL_MS = 60_000;
+/**
+ * A stream that never goes silent can still never end (a repetition loop inside a JSON string was the
+ * likely cause of a brief that sat on "Structuring" for six minutes). Two bounds on that: an output
+ * cap per call, and a wall-clock deadline per call. The longest legitimate call measured was ~70 s
+ * and ~2,400 output tokens.
+ */
+export const MAX_OUTPUT_TOKENS = 6000;
+export const CALL_DEADLINE_MS = 150_000;
 
 export class ModelStallError extends Error {
-  constructor(model: string, ms: number) {
-    super(`The model (${model}) sent nothing for ${Math.round(ms / 1000)}s; the stream was abandoned.`);
+  constructor(model: string, ms: number, overran = false) {
+    super(overran
+      ? `The model (${model}) was still generating after ${Math.round(ms / 1000)}s; the call was abandoned.`
+      : `The model (${model}) sent nothing for ${Math.round(ms / 1000)}s; the stream was abandoned.`);
     this.name = 'ModelStallError';
   }
 }
@@ -115,6 +133,7 @@ export class OpenRouterProvider implements ChatProvider {
   private readonly client: OpenAI;
   private readonly reasoning: Record<string, unknown> | undefined;
   private readonly stallMs: number;
+  private readonly callDeadlineMs: number;
 
   constructor(opts: OpenRouterOptions = {}) {
     const apiKey = opts.apiKey ?? process.env.OPENROUTER_API_KEY;
@@ -122,7 +141,8 @@ export class OpenRouterProvider implements ChatProvider {
     this.model = opts.model ?? process.env.OPENROUTER_MODEL ?? '';
     if (!this.model) throw new Error('OPENROUTER_MODEL is not set');
     this.stallMs = opts.stallMs ?? STALL_MS;
-    this.reasoning = reasoningParam(opts.reasoning ?? process.env.OPENROUTER_REASONING);
+    this.callDeadlineMs = opts.callDeadlineMs ?? CALL_DEADLINE_MS;
+    this.reasoning = reasoningParam(opts.reasoning ?? process.env.OPENROUTER_REASONING ?? DEFAULT_REASONING);
     this.client = new OpenAI({
       apiKey,
       baseURL: opts.baseURL ?? 'https://openrouter.ai/api/v1',
@@ -158,7 +178,9 @@ export class OpenRouterProvider implements ChatProvider {
     req.signal?.addEventListener('abort', onOuterAbort, { once: true });
     if (req.signal?.aborted) ac.abort();
     let stalled = false;
+    let overran = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = setTimeout(() => { stalled = true; overran = true; ac.abort(); }, this.callDeadlineMs);
     const arm = () => {
       clearTimeout(timer);
       timer = setTimeout(() => { stalled = true; ac.abort(); }, this.stallMs);
@@ -177,6 +199,7 @@ export class OpenRouterProvider implements ChatProvider {
         temperature: req.temperature,
         stream: true,
         stream_options: { include_usage: true },
+        max_tokens: MAX_OUTPUT_TOKENS,
         // Not in the SDK's types: an OpenRouter extension, passed through in the body.
         ...(this.reasoning ? { reasoning: this.reasoning } : {}),
       } as OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming, { signal: ac.signal });
@@ -203,14 +226,15 @@ export class OpenRouterProvider implements ChatProvider {
         if (choice.finish_reason) finishReason = choice.finish_reason;
       }
     } catch (e) {
-      if (stalled) throw new ModelStallError(this.model, this.stallMs);
+      if (stalled) throw new ModelStallError(this.model, overran ? this.callDeadlineMs : this.stallMs, overran);
       throw e;
     } finally {
       clearTimeout(timer);
+      clearTimeout(deadline);
       req.signal?.removeEventListener('abort', onOuterAbort);
     }
     // The SDK ends an aborted stream without throwing; a cut-off turn must never read as a finished one.
-    if (stalled) throw new ModelStallError(this.model, this.stallMs);
+    if (stalled) throw new ModelStallError(this.model, overran ? this.callDeadlineMs : this.stallMs, overran);
     if (ac.signal.aborted) throw new Error('aborted');
 
     for (const [index, tc] of [...pending.entries()].sort((a, b) => a[0] - b[0])) {

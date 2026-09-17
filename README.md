@@ -37,7 +37,7 @@ npm run typecheck && npm run build
 npm test                # unit: graph algorithms, queries, agent loop (fake provider)
 npm run check:schema    # migrations applied, every table/column present
 npm run check:seed      # clue chain present + findable; provenance integrity
-npm run check:auth      # password gate behaves (needs dev server on :3000)
+npm run check:auth      # password gate behaves (needs a dev server; E2E_BASE_URL=http://localhost:<port> if not :3000)
 npm run check:api       # every endpoint live, schema-valid, non-empty (dev server)
 npm run test:e2e        # Playwright: shell + views
 ```
@@ -57,14 +57,16 @@ npm run test:e2e        # Playwright: shell + views
    | `OPENROUTER_API_KEY` | your key (set a credit limit on it) |
    | `OPENROUTER_MODEL` | `deepseek/deepseek-v4-flash-0731` (vendor prefix required; or whatever `smoke:model` picked) |
    | `APP_PASSWORD` | the shared password |
+   | `OPENROUTER_REASONING` | optional; `off` (default), `low`/`medium`/`high`, or `default`. Leave unset: with the model's own default one question takes 3–13 minutes |
    | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | from Supabase → Settings → API (unused by the app today; harmless) |
 
 3. Push. Vercel builds and deploys; `/api/health` on the deployed URL should return
    `{ ok: true, driver: "pg", counts: { entities: 169, reports: 80 } }`.
 
 Free-tier notes: Supabase pauses idle projects — open the app the day before you
-show it. Vercel's Hobby function limit bounds the analyst; the agent loop is
-capped at 8 tool steps for that reason.
+show it. Vercel's function limit bounds the analyst: the agent routes declare
+`maxDuration = 300`, the loop is capped at 8 tool steps and at 200 s of tool
+turns, after which it answers with what it has.
 
 ## Layout
 

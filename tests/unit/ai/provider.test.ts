@@ -44,6 +44,11 @@ const answers: Handler = (_req, res) => {
   res.end('data: [DONE]\n\n');
 };
 const hangsSilently: Handler = (_req, res) => { sseHead(res); res.write(': keep-alive\n\n'); };
+const neverStops: Handler = (_req, res) => {
+  sseHead(res);
+  const t = setInterval(() => { if (res.writableEnded || res.destroyed) clearInterval(t); else res.write(chunk({ content: ' ' })); }, 20);
+  res.on('close', () => clearInterval(t));
+};
 const hangsAfterText: Handler = (_req, res) => { sseHead(res); res.write(chunk({ role: 'assistant', content: 'partial' })); };
 
 async function drain(it: AsyncIterable<ProviderEvent>) {
@@ -78,6 +83,18 @@ describe('OpenRouterProvider stall guard', () => {
     })()).rejects.toBeInstanceOf(ModelStallError);
     expect(seen).toEqual([{ type: 'text', delta: 'partial' }]);
     expect(bodies).toHaveLength(1);
+  });
+
+  it('a stream that never goes silent is still cut off at the call deadline', async () => {
+    const { url, bodies } = await serve([neverStops]);
+    const p = new OpenRouterProvider({ apiKey: 'test', model: 'm', baseURL: url, stallMs: 150, callDeadlineMs: 300 });
+    const t0 = Date.now();
+    const err = await drain(p.complete({ messages: [{ role: 'user', content: 'hi' }], tools: [] })).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ModelStallError);
+    expect((err as Error).message).toMatch(/still generating/);
+    expect(Date.now() - t0).toBeLessThan(2000);
+    expect(bodies).toHaveLength(1); // text had been yielded, so no retry
+    expect(bodies[0].max_tokens).toBeGreaterThan(0);
   });
 
   it('a caller abort is not a stall and is not retried', async () => {

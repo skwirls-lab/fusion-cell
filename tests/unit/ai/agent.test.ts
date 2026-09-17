@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createDb, type DbHandle } from '@/lib/db';
 import { runMigrations } from '@/lib/db/migrate';
 import { loadSeed } from '@/lib/db/seed';
-import { runAgent, type AgentEvent } from '@/lib/ai/agent';
+import { runAgent, normalizeCitations, type AgentEvent } from '@/lib/ai/agent';
 import { ScriptedProvider, type ScriptedTurn } from '@/lib/ai/provider';
 
 let h: DbHandle;
@@ -59,7 +59,7 @@ describe('runAgent (scripted provider, real seeded DB)', () => {
       'Highlighting 1 entities, 0 events, 0 edges',
     ]);
     expect(ok.map((t) => t.step)).toEqual([1, 2, 3]);
-    expect(ok[0].summary).toMatch(/^\d+ reports$/);
+    expect(ok[0].summary).toMatch(/^2 reports, 2 new$/);
     expect(ofType(events, 'trace').filter((t) => t.status === 'start')).toHaveLength(3);
 
     const ui = ofType(events, 'ui');
@@ -93,7 +93,7 @@ describe('runAgent (scripted provider, real seeded DB)', () => {
     const numbers = out.reports.map((r) => r.report_number);
     expect(numbers).toContain('R-0007');
     expect(numbers).toContain('R-0064');
-    for (const r of out.reports) expect(r.snippet.length).toBeLessThanOrEqual(300);
+    for (const r of out.reports) expect(r.snippet.length).toBeLessThanOrEqual(360);
     expect(ofType(events, 'done')[0]).toMatchObject({ steps: 1 });
   });
 
@@ -171,6 +171,33 @@ describe('runAgent (scripted provider, real seeded DB)', () => {
     expect(provider.requests).toHaveLength(3);
     expect(provider.requests[2].tools).toEqual([]);
     expect(result.answer).toBe('Partial answer.');
+  });
+
+  it('an identical repeated tool call gets a pointer, not the payload again', async () => {
+    const { provider, events } = await run([
+      { toolCalls: [{ name: 'get_entity', args: { entity_id: 'per_doss_renley' } }] },
+      { toolCalls: [{ name: 'get_entity', args: { entity_id: 'per_doss_renley' } }, { name: 'get_entity', args: { entity_id: 'per_ilsa_varro' } }] },
+      { text: 'done' },
+    ]);
+    const toolMsgs = provider.requests[2].messages.filter((m) => m.role === 'tool');
+    expect(toolMsgs).toHaveLength(3);
+    expect(JSON.parse(toolMsgs[0].content as string)).not.toHaveProperty('duplicate_call');
+    expect(JSON.parse(toolMsgs[1].content as string)).toMatchObject({ duplicate_call: true, first_made_at_step: 1 });
+    expect(JSON.parse(toolMsgs[2].content as string)).not.toHaveProperty('duplicate_call');
+    expect(ofType(events, 'trace').filter((t) => t.summary === 'duplicate of step 1')).toHaveLength(1);
+  });
+
+  it('citation format drift is normalised, so an unbracketed fabricated number is still caught', async () => {
+    expect(normalizeCitations('a (R-0019) b R-0042, c [R-0019, R-0042] d [R-0003; R-0007] e (R-0001 and R-0002) f [R-0019]'))
+      .toBe('a [R-0019] b [R-0042], c [R-0019] [R-0042] d [R-0003] [R-0007] e [R-0001] [R-0002] f [R-0019]');
+    expect(normalizeCitations('ids like per_R-0019x or XR-0019 stay')).toBe('ids like per_R-0019x or XR-0019 stay');
+    const { result, events } = await run([
+      { toolCalls: [{ name: 'search_reports', args: { query: 'LANTERN' } }] },
+      { text: 'LANTERN has access (R-0019). Also see R-9999.' },
+    ]);
+    expect(result.answer).toBe('LANTERN has access [R-0019]. Also see [R-9999].');
+    expect(result.citations).toEqual({ valid: ['R-0019'], invalid: ['R-9999'] });
+    expect(ofType(events, 'done')[0].answer).toBe(result.answer);
   });
 
   it('an empty final turn is asked for once more; the second answer is the answer', async () => {

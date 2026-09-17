@@ -50,6 +50,9 @@ const id = z.string().min(1);
 
 // ---- search_reports -------------------------------------------------------------
 
+/** Query-focused passages, not the report's header (see focusedSnippet). */
+const SNIPPET_CHARS = 360;
+
 export const searchReports = defineTool({
   name: 'search_reports',
   description:
@@ -63,32 +66,43 @@ export const searchReports = defineTool({
   }),
   async run(db, a, ctx) {
     const base = { q: a.query, type: a.types, entity: a.entity_id, offset: 0 };
-    const strict = await listReports(db, { ...base, limit: a.limit });
+    const strict = await listReports(db, { ...base, limit: a.limit }, { focusSnippet: SNIPPET_CHARS });
     // Backfill with reports matching only SOME of the terms: a multi-word query is ANDed by the
     // full-text index, and one word the reports never use ("Doss" vs "Cmdr Renley") would hide them all.
     let partial: typeof strict.reports = [];
     if (strict.reports.length < a.limit) {
       const have = new Set(strict.reports.map((r) => r.reportNumber));
-      const loose = await listReports(db, { ...base, limit: a.limit + have.size }, { match: 'any' });
+      const loose = await listReports(db, { ...base, limit: a.limit + have.size }, { match: 'any', focusSnippet: SNIPPET_CHARS });
       partial = loose.reports.filter((r) => !have.has(r.reportNumber)).slice(0, a.limit - strict.reports.length);
     }
-    const shape = (r: (typeof strict.reports)[number], match: 'all_terms' | 'some_terms') => ({
-      report_number: r.reportNumber,
-      type: r.type,
-      title: r.title,
-      reported_at: r.reportedAt,
-      event_at: r.eventAt,
-      grading: `${r.sourceReliability}${r.infoCredibility}`,
-      match,
-      snippet: clip(r.snippet, 300),
-      entity_ids: r.entityIds,
-    });
+    // Reports an earlier call already returned come back as a one-line stub: repeated near-identical
+    // searches then cost little context and visibly turn up nothing new.
+    const shape = (r: (typeof strict.reports)[number], match: 'all_terms' | 'some_terms') =>
+      ctx.seenReportNumbers.has(r.reportNumber)
+        ? { report_number: r.reportNumber, type: r.type, title: r.title, match, already_returned: true as const }
+        : {
+            report_number: r.reportNumber,
+            type: r.type,
+            title: r.title,
+            reported_at: r.reportedAt,
+            event_at: r.eventAt,
+            grading: `${r.sourceReliability}${r.infoCredibility}`,
+            match,
+            snippet: clip(r.snippet, SNIPPET_CHARS),
+            entity_ids: r.entityIds,
+          };
     const reports = [...strict.reports.map((r) => shape(r, 'all_terms')), ...partial.map((r) => shape(r, 'some_terms'))];
+    const fresh = reports.filter((r) => !('already_returned' in r)).length;
     for (const r of reports) ctx.seenReportNumbers.add(r.report_number);
-    return { total_all_terms: strict.total, reports };
+    return {
+      total_all_terms: strict.total,
+      new_reports: fresh,
+      ...(reports.length && fresh === 0 ? { note: 'Every match was already returned earlier in this conversation. Searching again with similar words will not find more; read the reports with get_report or answer.' } : {}),
+      reports,
+    };
   },
   label: (a) => `Searching reports for "${a.query}"`,
-  summarize: (r) => `${count(r, 'reports')} reports`,
+  summarize: (r) => `${count(r, 'reports')} reports, ${(r as { new_reports: number }).new_reports} new`,
 });
 
 // ---- get_report -----------------------------------------------------------------
