@@ -22,6 +22,7 @@ const FALLBACK_CSS = [
   '.banner{position:fixed;left:0;right:0;height:28px;display:flex;align-items:center;justify-content:center;background:#b45309;color:#1a0d02;font-family:monospace;font-weight:700;letter-spacing:.18em;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
   '.banner.top{top:0}.banner.bottom{bottom:0}main.brief{max-width:760px;margin:0 auto;padding:52px 32px}',
   '.cite{font-family:monospace;font-size:10px;border:1px solid #0a6e80;border-radius:3px;padding:0 5px;margin:0 2px}',
+  '.cite.invalid{color:#b91c1c;border:1px dashed #b91c1c;background:#fef2f2;text-decoration:line-through}',
   '@page{margin:22mm 14mm}@media print{.toolbar{display:none}}',
 ].join('');
 
@@ -58,7 +59,7 @@ export const GET = handle(async (req, ctx: { params: Promise<{ id: string }> }) 
 <main class="brief" data-brief-id="${esc(brief.id)}" data-version="${brief.version}">
 <div class="toolbar"><button type="button" onclick="window.print()">Print / Save as PDF</button></div>
 <div class="meta">${esc(brief.id)} · ${esc(TEMPLATE_LABEL[brief.template])} · v${brief.version} · updated ${esc(brief.updatedAt)}</div>
-${briefMarkdownToHtml(brief.markdown)}
+${briefMarkdownToHtml(brief.markdown, new Set(brief.citations))}
 </main>
 <div class="banner bottom" role="note">${EXERCISE_BANNER_TEXT}</div>
 ${autoPrint ? '<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},50)})</script>' : ''}

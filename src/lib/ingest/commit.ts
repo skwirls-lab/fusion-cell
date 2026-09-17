@@ -11,6 +11,7 @@ import { randomBytes } from 'node:crypto';
 import type { Db } from '../db';
 import { entities, relationships, reports, events, reportLinks, eventEntities, ingestJobs, type Entity as EntityRow } from '../db/schema';
 import { parseJobExtraction } from './jobs';
+import { typeCompatible } from './match';
 import { IngestDecisions, EVIDENCE_MAX, type CommitResult, type IngestDecisions as DecisionsInput } from './types';
 
 export type CommitErrorCode = 'not_found' | 'no_extraction' | 'already_committed' | 'discarded' | 'bad_decision';
@@ -30,6 +31,16 @@ const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').tri
 const slug = (s: string) => norm(s).replace(/\s+/g, '_').slice(0, 24).replace(/_+$/, '') || 'entity';
 const clip = (s: string, n = EVIDENCE_MAX) => (s.length > n ? s.slice(0, n) : s);
 
+/** Decisions keyed by extraction index, FIRST occurrence wins; an index past the extraction is a 400. */
+function byIndex<T extends { index: number }>(kind: string, list: T[], extracted: number): Map<number, T> {
+  const out = new Map<number, T>();
+  for (const d of list) {
+    if (d.index >= extracted) throw new CommitError('bad_decision', `${kind} #${d.index}: not in the extraction (${extracted} extracted)`);
+    if (!out.has(d.index)) out.set(d.index, d);
+  }
+  return out;
+}
+
 export const REPORT_NUMBER_WIDTH = 4;
 
 /** max existing R-#### + 1, zero-padded. Runs inside the commit transaction. */
@@ -44,6 +55,9 @@ export async function commitIngest(db: Db, jobId: string, decisionsIn: Decisions
   const decisions = IngestDecisions.parse(decisionsIn);
 
   return db.transaction(async (tx) => {
+    // Serialises report-number allocation across concurrent commits (max+1 below is not atomic on its
+    // own). Transaction-scoped, released on commit/rollback; PGlite honours it too.
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext('fusion_report_number'))`);
     const [job] = await tx.select().from(ingestJobs).where(eq(ingestJobs.id, jobId)).limit(1);
     if (!job) throw new CommitError('not_found', `ingest job ${jobId} does not exist`);
     if (job.status === 'committed') throw new CommitError('already_committed', `job ${jobId} was already committed as ${job.reportId ?? '?'}`);
@@ -53,6 +67,9 @@ export async function commitIngest(db: Db, jobId: string, decisionsIn: Decisions
 
     const skipped: string[] = [];
     const now = new Date();
+    const entityDecision = byIndex('entity', decisions.entities, x.entities.length);
+    const relationshipDecision = byIndex('relationship', decisions.relationships, x.relationships.length);
+    const eventDecision = byIndex('event', decisions.events, x.events.length);
 
     // ---- report ---------------------------------------------------------------------
     const reportNumber = await nextReportNumber(tx);
@@ -64,7 +81,7 @@ export async function commitIngest(db: Db, jobId: string, decisionsIn: Decisions
       body: job.rawText,
       sourceReliability: x.source_reliability ?? 'C',
       infoCredibility: x.info_credibility ?? 3,
-      reportedAt: now,
+      reportedAt: decisions.reportedAt ? new Date(decisions.reportedAt) : (x.event_at ? new Date(x.event_at) : now),
       eventAt: x.event_at ? new Date(x.event_at) : null,
     });
 
@@ -74,7 +91,6 @@ export async function commitIngest(db: Db, jobId: string, decisionsIn: Decisions
     const register = (names: string[], id: string) => { for (const n of names) { const k = norm(n); if (k && !nameToId.has(k)) nameToId.set(k, id); } };
     const created: CommitResult['created'] = { entities: [], relationships: [], events: [] };
     const linked: CommitResult['linked'] = [];
-    const entityDecision = new Map(decisions.entities.map((d) => [d.index, d]));
 
     for (let i = 0; i < x.entities.length; i++) {
       const ext = x.entities[i];
@@ -86,6 +102,7 @@ export async function commitIngest(db: Db, jobId: string, decisionsIn: Decisions
         if (!d.entityId) throw new CommitError('bad_decision', `entity #${i} "${ext.name}": link requires entityId`);
         const [row] = await tx.select().from(entities).where(eq(entities.id, d.entityId)).limit(1);
         if (!row) throw new CommitError('bad_decision', `entity #${i} "${ext.name}": ${d.entityId} does not exist`);
+        if (!typeCompatible(row.type, ext.type)) throw new CommitError('bad_decision', `entity #${i} "${ext.name}" (${ext.type}): cannot link to ${row.id}, a ${row.type}`);
         register([ext.name, ...ext.aliases, row.name, ...row.aliases], row.id);
         byId.set(row.id, row);
         linked.push({ id: row.id, name: row.name });
@@ -119,10 +136,9 @@ export async function commitIngest(db: Db, jobId: string, decisionsIn: Decisions
     const evidenceFor = new Map<string, string>(); // entityId -> first supporting quote
 
     // ---- relationships ------------------------------------------------------------
-    for (const d of decisions.relationships) {
+    for (const d of relationshipDecision.values()) {
       if (d.action !== 'create') continue;
       const ext = x.relationships[d.index];
-      if (!ext) { skipped.push(`relationship #${d.index}: not in the extraction`); continue; }
       const s = resolve(ext.source_name);
       const t = resolve(ext.target_name);
       if (!s || !t) {
@@ -143,10 +159,9 @@ export async function commitIngest(db: Db, jobId: string, decisionsIn: Decisions
     }
 
     // ---- events ---------------------------------------------------------------------
-    for (const d of decisions.events) {
+    for (const d of eventDecision.values()) {
       if (d.action !== 'create') continue;
       const ext = x.events[d.index];
-      if (!ext) { skipped.push(`event #${d.index}: not in the extraction`); continue; }
       const participants = [...new Set(ext.participant_names.map(resolve).filter((v): v is string => !!v))];
 
       // Where: the named location if it has coordinates, else the first place a participant is located_at.

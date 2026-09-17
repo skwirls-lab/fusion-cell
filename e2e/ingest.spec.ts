@@ -106,6 +106,7 @@ test('paste → review (link suggestion) → commit → R-0081 appears on the ma
   const review = page.getByTestId('ingest-review');
   await expect(review).toBeVisible();
   await expect(page.getByTestId('review-title')).toHaveValue(EXTRACTION.title);
+  await expect(page.getByTestId('review-reported-at')).toHaveValue('2026-08-20T14:00'); // prefilled from event_at
 
   const rows = page.getByTestId('ingest-entity-row');
   await expect(rows).toHaveCount(4);
@@ -156,8 +157,11 @@ test('paste → review (link suggestion) → commit → R-0081 appears on the ma
     return cy?.$(`#${id}`).length ?? 0;
   }, newId)).toBe(1);
 
-  // And the live feed has it on top.
-  await expect(page.locator('[data-testid="feed"] li.feed-row').first()).toHaveAttribute('data-report', 'R-0081');
+  // The live feed lists it — dated by its event time (20 Aug), so it is NOT the newest report and the
+  // scenario clock stays where the seed put it instead of jumping to today.
+  await expect(page.locator('[data-testid="feed"] li.feed-row[data-report="R-0081"]')).toBeVisible();
+  await expect(page.locator('[data-testid="feed"] li.feed-row[data-report="R-0081"]')).toHaveAttribute('data-reported-at', '2026-08-20T14:00:00.000Z');
+  await expect(page.getByTestId('scenario-clock')).toHaveText('SCENARIO DAY 30');
 });
 
 test('a second commit of the same job is refused, and a discarded job cannot be committed', async ({ page, request }) => {

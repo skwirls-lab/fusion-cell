@@ -50,6 +50,8 @@ code { font-family: var(--font-mono); font-size: 11px; background: var(--panel);
   border: 1px solid rgba(34, 211, 238, 0.45); border-radius: 3px; background: rgba(34, 211, 238, 0.10);
 }
 .cite::before { content: ""; }
+/* A chip whose number is not among the brief's validated citations (briefMarkdownToHtml's validCitations): dashed red border, struck through. */
+.cite.invalid { color: #ef4444; border: 1px dashed rgba(239, 68, 68, 0.7); background: rgba(239, 68, 68, 0.10); text-decoration: line-through; }
 
 @page { size: A4; margin: 22mm 14mm 22mm 14mm; }
 @media print {
@@ -61,5 +63,6 @@ code { font-family: var(--font-mono); font-size: 11px; background: var(--panel);
   .meta { color: #555; }
   code { background: #f2f2f2; border-color: #ccc; color: #111; }
   .cite { color: #0a6e80; border-color: #0a6e80; background: #e6f7fa; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .cite.invalid { color: #b91c1c; border: 1px dashed #b91c1c; background: #fef2f2; }
   a { color: inherit; text-decoration: none; }
 }

@@ -11,6 +11,7 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,
+  // ingest.spec reseeds the database in beforeAll/afterAll, so spec files must never run in parallel.
   workers: 1,
   retries: 0,
   reporter: [['list']],

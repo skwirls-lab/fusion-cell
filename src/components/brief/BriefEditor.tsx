@@ -118,6 +118,11 @@ function Editor({ brief, onDeleted }: { brief: BriefFull; onDeleted: () => void 
             {deleting ? 'Deleting…' : 'Delete'}
           </button>
         </div>
+        {brief.citations.length === 0 && (
+          <div role="status" data-testid="brief-no-citations" className="rounded border border-banner/60 bg-banner/10 px-2 py-1 text-[11px] text-banner">
+            No validated citations — this brief cites no retrieved reports
+          </div>
+        )}
         {error && <div role="alert" className="rounded border border-hegemony/60 bg-hegemony/10 px-2 py-1 text-[11px] text-hegemony">{error}</div>}
       </header>
 
@@ -133,7 +138,7 @@ function Editor({ brief, onDeleted }: { brief: BriefFull; onDeleted: () => void 
           />
         ) : (
           <div className="h-full overflow-y-auto px-4 py-3">
-            <BriefPreview markdown={markdown} />
+            <BriefPreview markdown={markdown} citations={brief.citations} />
           </div>
         )}
       </div>

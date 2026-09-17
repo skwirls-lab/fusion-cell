@@ -138,11 +138,14 @@ export const EntityDecision = z.object({
 });
 export const KeepDecision = z.object({ index: z.number().int().min(0), action: z.enum(['create', 'discard']) });
 
+/** Same caps as Extraction: a decision list can never be longer than what was extracted. */
 export const IngestDecisions = z.object({
   title: z.string().trim().min(1).max(200).optional(),
-  entities: z.array(EntityDecision).default([]),
-  relationships: z.array(KeepDecision).default([]),
-  events: z.array(KeepDecision).default([]),
+  /** When the report was received (ISO). Defaults to the extraction's event_at, then now — never pushes the scenario clock forward by accident. */
+  reportedAt: looseIso.optional(),
+  entities: z.array(EntityDecision).max(60).default([]),
+  relationships: z.array(KeepDecision).max(80).default([]),
+  events: z.array(KeepDecision).max(40).default([]),
 });
 export type IngestDecisions = z.input<typeof IngestDecisions>;
 export type IngestDecisionsOut = z.output<typeof IngestDecisions>;

@@ -94,7 +94,7 @@ export function isGenericName(name: string): boolean {
   return tokens(n).length === 0;
 }
 
-const typeCompatible = (a: string, b: string) => a === b || a === 'other' || b === 'other';
+export const typeCompatible = (a: string, b: string) => a === b || a === 'other' || b === 'other';
 
 /** Best score of an extracted name against one existing entity's name + aliases. */
 export function scoreAgainst(name: string, ex: MatchableEntity): number {
@@ -127,9 +127,11 @@ export function matchAgainst(existing: MatchableEntity[], extracted: ExtractedEn
     }
     scored.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
     const candidates = scored.slice(0, 3);
-    const best = candidates[0];
+    // All candidates are listed, but the suggestion is the best TYPE-COMPATIBLE one: a same-name
+    // entity of another type (a location called Halloway vs the organization) must not win.
+    const best = candidates.find((c) => typeCompatible(c.type, e.type));
     if (isGenericName(e.name)) return { candidates, suggested: 'discard', suggestedId: null };
-    if (best && best.score >= LINK_THRESHOLD && typeCompatible(best.type, e.type)) {
+    if (best && best.score >= LINK_THRESHOLD) {
       return { candidates, suggested: 'link', suggestedId: best.id };
     }
     return { candidates, suggested: 'create', suggestedId: null };

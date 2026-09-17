@@ -69,6 +69,21 @@ describe('matchAgainst (pure)', () => {
     expect(m.suggested).toBe('create');
   });
 
+  it('a name shared across types suggests the type-compatible candidate, all candidates still listed', () => {
+    // The location sorts first (same score, same name → input order), so a naive candidates[0] would pick it.
+    const existing: MatchableEntity[] = [
+      { id: 'loc_halloway', name: 'Halloway', type: 'location', factionId: null, aliases: [] },
+      { id: 'org_halloway', name: 'Halloway', type: 'organization', factionId: 'cartel', aliases: [] },
+    ];
+    const [m] = matchAgainst(existing, [ext('Halloway', 'organization')]);
+    expect(m.candidates.map((c) => c.id)).toEqual(['loc_halloway', 'org_halloway']);
+    expect(m.suggested).toBe('link');
+    expect(m.suggestedId).toBe('org_halloway');
+    // 'other' is compatible with anything; a type nothing matches still creates.
+    expect(matchAgainst(existing, [ext('Halloway', 'other')])[0]).toMatchObject({ suggested: 'link', suggestedId: 'loc_halloway' });
+    expect(matchAgainst(existing, [ext('Halloway', 'vessel')])[0]).toMatchObject({ suggested: 'create', suggestedId: null });
+  });
+
   it('generic names are discarded even when something scores', () => {
     const [m] = matchAgainst(EXISTING, [ext('the officer')]);
     expect(m.suggested).toBe('discard');

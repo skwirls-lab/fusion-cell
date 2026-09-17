@@ -10,7 +10,7 @@ import { useMemo, useState } from 'react';
 import type { IngestJobOut, IngestDecisions } from '@/lib/client/api';
 import type { EntityMatch, ExtractedEntity } from '@/lib/ingest/types';
 import { FactionChip, ReportTypeBadge, TypeBadge } from '@/lib/client/chips';
-import { confidencePct, formatDtgFull } from '@/lib/client/format';
+import { confidencePct, formatDtgFull, isoToLocalInput, localInputToIso } from '@/lib/client/format';
 import { useFactions } from '@/lib/client/api';
 import { TH, buttonClass, dangerButtonClass, inputClass, primaryButtonClass, selectClass } from '@/components/lists/PageFrame';
 
@@ -45,6 +45,9 @@ export function ReviewPanel({ job, onCommit, onDiscard, error, setError }: {
   const factionName = useMemo(() => new Map((factions.data ?? []).map((f) => [f.id, f.name])), [factions.data]);
 
   const [title, setTitle] = useState(x?.title ?? '');
+  // reported_at defaults to the report's own event time, not "now": an ingested report about day 20
+  // must not advance the scenario clock to today.
+  const [reportedAt, setReportedAt] = useState(() => isoToLocalInput(x?.event_at ?? new Date().toISOString()));
   const [entities, setEntities] = useState<EntityDecisionState[]>(() =>
     (x?.entities ?? []).map((e, i) => {
       const m = matches[i] ?? NO_MATCH;
@@ -75,6 +78,7 @@ export function ReviewPanel({ job, onCommit, onDiscard, error, setError }: {
     try {
       await onCommit({
         title: title.trim() && title.trim() !== x!.title ? title.trim() : undefined,
+        reportedAt: localInputToIso(reportedAt) ?? undefined,
         entities: entities.map((d, index) => {
           const orig = x!.entities[index];
           const overrides = d.action === 'create' && (d.name !== orig.name || d.type !== orig.type) ? { name: d.name, type: d.type } : undefined;
@@ -106,6 +110,10 @@ export function ReviewPanel({ job, onCommit, onDiscard, error, setError }: {
         <label className="mt-1.5 block">
           <span className="font-mono text-[9px] uppercase tracking-wider text-muted">Title</span>
           <input value={title} onChange={(e) => setTitle(e.target.value)} aria-label="Report title" data-testid="review-title" className={inputClass + ' mt-0.5 w-full text-[12px]'} />
+        </label>
+        <label className="mt-1.5 block">
+          <span className="font-mono text-[9px] uppercase tracking-wider text-muted">Reported at</span>
+          <input type="datetime-local" value={reportedAt} onChange={(e) => setReportedAt(e.target.value)} aria-label="Reported at" data-testid="review-reported-at" className={inputClass + ' mt-0.5 text-[12px]'} />
         </label>
         <p className="mt-1.5 text-[12px] leading-snug text-text" data-testid="review-summary">{x.summary || <span className="text-muted">No summary.</span>}</p>
       </section>

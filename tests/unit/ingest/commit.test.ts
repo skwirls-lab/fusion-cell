@@ -7,7 +7,7 @@ import { listReports, getReport, getEntityProfile, listEvents } from '@/lib/db/q
 import { createIngestJob, getIngestJob, updateIngestJob } from '@/lib/ingest/jobs';
 import { matchEntities } from '@/lib/ingest/match';
 import { commitIngest, CommitError, nextReportNumber } from '@/lib/ingest/commit';
-import type { Extraction, JobExtraction } from '@/lib/ingest/types';
+import { IngestDecisions, type Extraction, type JobExtraction } from '@/lib/ingest/types';
 
 const RAW = 'FIELD REPORT. VHS Nightglass, a Hegemony corvette not previously catalogued, was observed holding station at Tessaly Gate at 2026-08-22 06:30Z. Lt Cmdr Ilsa Varro was named in the escort manifest as the releasing officer. Nightglass exchanged burst traffic with an unidentified station.';
 
@@ -124,8 +124,11 @@ describe('commitIngest (real seed, in-memory PGlite)', () => {
     expect(profile!.connections[0].reportIds).toEqual(['R-0081']);
     const fts = await listReports(h.db, { q: 'Nightglass', limit: 10, offset: 0 });
     expect(fts.reports.map((r) => r.reportNumber)).toContain('R-0081');
+    // reported_at defaults to the extraction's event_at (22 Aug), NOT now: the ingested report must not
+    // become the newest report and push the scenario clock to today.
+    expect(report!.reportedAt).toBe('2026-08-22T06:30:00.000Z');
     const newest = await listReports(h.db, { limit: 1, offset: 0 });
-    expect(newest.reports[0].reportNumber).toBe('R-0081'); // reported_at = now → top of the feed
+    expect(newest.reports[0].reportNumber).not.toBe('R-0081');
 
     // Job flipped.
     const after = await getIngestJob(h.db, job.id);
@@ -164,9 +167,10 @@ describe('commitIngest (real seed, in-memory PGlite)', () => {
       events: [{ title: 'Varro call intercept', type: 'communication', occurred_at: null, location_name: null, participant_names: ['Ilsa Varro'], description: '', confidence: 0.6 }],
     };
     await updateIngestJob(h.db, job.id, { status: 'reviewed', extraction: { extraction: x, matches: [] } satisfies JobExtraction });
-    const r = await commitIngest(h.db, job.id, { entities: [{ index: 0, action: 'link', entityId: 'per_ilsa_varro' }], relationships: [], events: [{ index: 0, action: 'create' }] });
+    const r = await commitIngest(h.db, job.id, { reportedAt: '2026-08-25T09:15:00Z', entities: [{ index: 0, action: 'link', entityId: 'per_ilsa_varro' }], relationships: [], events: [{ index: 0, action: 'create' }] });
     expect(r.reportNumber).toBe('R-0082');
     expect(r.created.events).toHaveLength(1);
+    expect((await getReport(h.db, 'R-0082'))?.reportedAt).toBe('2026-08-25T09:15:00.000Z'); // an explicit reportedAt wins
     const [ev] = await h.db.select().from(schema.events).where(eq(schema.events.id, r.created.events[0]));
     // Wherever the seed says Varro is located_at, that is where the event lands; it inherits the extraction's event_at.
     const [home] = await h.db
@@ -178,6 +182,63 @@ describe('commitIngest (real seed, in-memory PGlite)', () => {
     expect(home.lon).not.toBeNull();
     expect(ev).toMatchObject({ lon: home.lon, lat: home.lat });
     expect(ev.occurredAt.toISOString()).toBe('2026-08-22T06:30:00.000Z');
+  });
+
+  it('duplicate decision indices insert one row each (first wins)', async () => {
+    const { job } = await makeReviewedJob();
+    const before = (await h.db.execute<{ n: number }>(sql`select count(*)::int n from relationships`)).rows[0].n;
+    const r = await commitIngest(h.db, job.id, {
+      entities: [
+        { index: 0, action: 'link', entityId: 'per_ilsa_varro' },
+        { index: 1, action: 'create' }, { index: 1, action: 'discard' }, // first wins → created
+        { index: 2, action: 'link', entityId: 'loc_tessaly_gate' },
+        { index: 3, action: 'discard' },
+      ],
+      relationships: [{ index: 0, action: 'create' }, { index: 0, action: 'create' }],
+      events: [{ index: 0, action: 'create' }, { index: 0, action: 'create' }],
+    });
+    expect(r.created.entities).toHaveLength(1);
+    expect(r.created.relationships).toHaveLength(1);
+    expect(r.created.events).toHaveLength(1);
+    const after = (await h.db.execute<{ n: number }>(sql`select count(*)::int n from relationships`)).rows[0].n;
+    expect(after).toBe(before + 1);
+    const links = await h.db.select().from(schema.reportLinks).where(eq(schema.reportLinks.reportId, r.reportNumber));
+    expect(links.filter((l) => l.objectType === 'relationship')).toHaveLength(1);
+    expect(links.filter((l) => l.objectType === 'event')).toHaveLength(1);
+  });
+
+  it('an index outside the extraction is a bad_decision (400), not a skipped string; decision lists are capped', async () => {
+    const { job } = await makeReviewedJob();
+    const countReports = async () => (await h.db.execute<{ n: number }>(sql`select count(*)::int n from reports`)).rows[0].n;
+    const n0 = await countReports();
+    for (const decisions of [
+      { entities: [], relationships: [{ index: 2, action: 'create' as const }], events: [] },
+      { entities: [], relationships: [], events: [{ index: 7, action: 'discard' as const }] },
+      { entities: [{ index: 4, action: 'discard' as const }], relationships: [], events: [] },
+    ]) {
+      const err = await commitIngest(h.db, job.id, decisions).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(CommitError);
+      expect((err as CommitError).code).toBe('bad_decision');
+      expect((err as CommitError).message).toMatch(/not in the extraction/);
+    }
+    expect(await countReports()).toBe(n0); // every one rolled back, no report number consumed
+    expect((await getIngestJob(h.db, job.id))?.status).toBe('reviewed');
+
+    const many = (n: number) => Array.from({ length: n }, (_, index) => ({ index, action: 'discard' as const }));
+    expect(IngestDecisions.safeParse({ entities: many(60), relationships: many(80), events: many(40) }).success).toBe(true);
+    expect(IngestDecisions.safeParse({ entities: many(61) }).success).toBe(false);
+    expect(IngestDecisions.safeParse({ relationships: many(81) }).success).toBe(false);
+    expect(IngestDecisions.safeParse({ events: many(41) }).success).toBe(false);
+  });
+
+  it('a link to an entity of an incompatible type is a bad_decision (400)', async () => {
+    const { job } = await makeReviewedJob();
+    // Entity #1 is the vessel VHS Nightglass; loc_tessaly_gate is a location.
+    const err = await commitIngest(h.db, job.id, { entities: [{ index: 1, action: 'link', entityId: 'loc_tessaly_gate' }], relationships: [], events: [] }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(CommitError);
+    expect((err as CommitError).code).toBe('bad_decision');
+    expect((err as CommitError).message).toMatch(/cannot link to loc_tessaly_gate, a location/);
+    expect((await getIngestJob(h.db, job.id))?.status).toBe('reviewed');
   });
 
   it('refuses unknown, discarded and extraction-less jobs with typed codes', async () => {

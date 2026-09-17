@@ -81,6 +81,14 @@ describe('briefMarkdownToHtml (print subset)', () => {
     expect(html.match(/<ul>/g)).toHaveLength(5);
   });
 
+  it('flags citations outside validCitations as invalid, and flags nothing when no set is given', () => {
+    const html = briefMarkdownToHtml('- p [R-0019] [R-9999]', new Set(['R-0019']));
+    expect(html).toContain('<span class="cite">R-0019</span>');
+    expect(html).toContain('<span class="cite invalid" title="not among this brief\'s validated citations">R-9999</span>');
+    expect(briefMarkdownToHtml('[R-9999]')).toBe('<p><span class="cite">R-9999</span></p>');
+    expect(briefMarkdownToHtml('[R-9999]', new Set())).toContain('cite invalid');
+  });
+
   it('never lets pasted HTML through', () => {
     const html = briefMarkdownToHtml('# <script>alert(1)</script>\n\nsee <b>this</b> & that [R-0001]');
     expect(html).toBe('<h1>&lt;script&gt;alert(1)&lt;/script&gt;</h1>\n<p>see &lt;b&gt;this&lt;/b&gt; &amp; that <span class="cite">R-0001</span></p>');

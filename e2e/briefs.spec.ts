@@ -124,6 +124,10 @@ test.describe.serial('briefs', () => {
     const chips = preview.getByTestId('brief-citation');
     await expect(chips).toHaveCount(2);
     await expect(chips.nth(0)).toHaveAttribute('data-citation', 'R-0019');
+    await expect(chips.nth(0)).not.toHaveAttribute('data-invalid');
+    // [R-0007] was typed by hand in the previous test and is not among the brief's validated citations.
+    await expect(chips.nth(1)).toHaveAttribute('data-citation', 'R-0007');
+    await expect(chips.nth(1)).toHaveAttribute('data-invalid', 'true');
 
     await chips.nth(0).click();
     const reader = page.getByTestId('report-reader');
@@ -148,7 +152,9 @@ test.describe.serial('briefs', () => {
     expect(html).toContain(`<div class="banner bottom" role="note">${BANNER}</div>`);
     expect(html).toContain(`<h1>${TITLE}</h1>`);
     expect(html).toContain('<span class="cite">R-0019</span>');
-    expect(html).toContain('<span class="cite">R-0007</span>');
+    // The hand-typed [R-0007] is not a validated citation of this brief: rendered as an invalid chip.
+    expect(html).toContain('<span class="cite invalid" title="not among this brief\'s validated citations">R-0007</span>');
+    expect(html).toContain('.cite.invalid');
     expect(html).toContain('position: fixed');
     expect(html).toContain('@page');
     expect(html).toContain('data-version="2"');
@@ -201,6 +207,21 @@ test.describe.serial('briefs', () => {
     expect(patch.status()).toBe(404);
     const emptyPatch = await page.request.patch('/api/briefs/brf_00000000', { data: {} });
     expect(emptyPatch.status()).toBe(400);
+  });
+
+  test('a brief with no validated citations shows the amber notice', async ({ page }) => {
+    await login(page);
+    const created = await page.request.post('/api/briefs/manual', {
+      data: { title: `E2E Uncited ${Date.now()}`, template: 'daily_summary', markdown: '# Uncited\n\nNothing retrieved.', citations: [] },
+    });
+    expect(created.status()).toBe(201);
+    const { id: uncited } = await created.json() as { id: string };
+    await page.goto(`/briefs?id=${uncited}`);
+    await expect(page.getByTestId('brief-editor')).toBeVisible();
+    const notice = page.getByRole('status').filter({ hasText: 'No validated citations' });
+    await expect(notice).toHaveText('No validated citations — this brief cites no retrieved reports');
+    // The cited brief from the first test never showed it.
+    expect(await page.request.delete(`/api/briefs/${uncited}`).then((r) => r.status())).toBe(200);
   });
 
   test.afterAll(() => {

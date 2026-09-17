@@ -396,12 +396,17 @@ export async function draftBrief(opts: DraftBriefOptions): Promise<DraftBriefRes
 
 const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-function inline(md: string): string {
+const INVALID_CITE_TITLE = "not among this brief's validated citations";
+
+function inline(md: string, validCitations?: Set<string>): string {
   let s = escapeHtml(md);
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
-  s = s.replace(/\[(R-\d{4})\]/g, '<span class="cite">$1</span>');
+  s = s.replace(/\[(R-\d{4})\]/g, (_, n: string) =>
+    validCitations && !validCitations.has(n)
+      ? `<span class="cite invalid" title="${INVALID_CITE_TITLE}">${n}</span>`
+      : `<span class="cite">${n}</span>`);
   return s;
 }
 
@@ -409,14 +414,17 @@ function inline(md: string): string {
  * Renders the markdown subset renderBriefMarkdown emits (plus what an analyst
  * is likely to type): #/## headings, -/* bullets, numbered lists, paragraphs,
  * **bold**, *em*, `code`, and [R-xxxx] citation chips. Everything is escaped
- * first, so pasted HTML never reaches the print page as markup.
+ * first, so pasted HTML never reaches the print page as markup. When
+ * `validCitations` is given, a chip whose number is not in it gets
+ * `class="cite invalid"` and a title saying so (print.css styles it).
  */
-export function briefMarkdownToHtml(markdown: string): string {
+export function briefMarkdownToHtml(markdown: string, validCitations?: Set<string>): string {
   const out: string[] = [];
   let list: 'ul' | 'ol' | null = null;
   let para: string[] = [];
+  const inl = (md: string) => inline(md, validCitations);
   const closeList = () => { if (list) { out.push(`</${list}>`); list = null; } };
-  const flushPara = () => { if (para.length) { out.push(`<p>${para.map(inline).join('<br>')}</p>`); para = []; } };
+  const flushPara = () => { if (para.length) { out.push(`<p>${para.map(inl).join('<br>')}</p>`); para = []; } };
 
   for (const rawLine of markdown.replace(/\r\n/g, '\n').split('\n')) {
     const line = rawLine.trimEnd();
@@ -427,12 +435,12 @@ export function briefMarkdownToHtml(markdown: string): string {
     if (heading) {
       flushPara(); closeList();
       const level = Math.min(heading[1].length, 6);
-      out.push(`<h${level}>${inline(heading[2])}</h${level}>`);
+      out.push(`<h${level}>${inl(heading[2])}</h${level}>`);
     } else if (bullet || numbered) {
       flushPara();
       const kind: 'ul' | 'ol' = bullet ? 'ul' : 'ol';
       if (list !== kind) { closeList(); out.push(`<${kind}>`); list = kind; }
-      out.push(`<li>${inline((bullet ?? numbered)![1])}</li>`);
+      out.push(`<li>${inl((bullet ?? numbered)![1])}</li>`);
     } else {
       closeList();
       para.push(line);

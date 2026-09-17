@@ -116,3 +116,22 @@ model is unreachable here (B1), so the e2e spec inserts a brief row through the 
 and verifies list, editor, versioning, preview chips → reader, print HTML and delete.
 It skips generation entirely; the pipeline is verified by tests/unit/brief with a
 scripted model over the real seed. Real-model drafting has not been exercised.
+
+**D20 — Review round 2 (end of Phase 6).** No critical findings. Trust boundaries
+held: the dev-only `manual` seams compile to dead code under `next build`
+(`process.env.NODE_ENV` is inlined), the print export escapes before every
+markdown pass, commit is one transaction with full rollback. Fixed before this
+commit: duplicate decision indices multiplied rows; unbounded decision arrays;
+`</report>` could close the extraction frame; same-name/different-type matches
+preselected the wrong entity and commit accepted wrong-type links; invalid
+citations rendered as normal chips in briefs; ingested reports stamped `now` and
+pushed the scenario clock to day 48. Report numbers are now allocated under
+`pg_advisory_xact_lock` — invisible on PGlite (single connection), real on Postgres.
+
+**D21 — Ingested `reported_at` is analyst-set, defaulting to `event_at ?? now`.**
+Never clamped: a fabricated timestamp would silently mis-order the feed. The
+review header has a "Reported at" field; the scenario clock stays at day 30
+after an ingest in the e2e.
+
+**D22 — Ingest job CRUD lives in `src/lib/ingest/jobs.ts`,** not `queries.ts`, to
+keep the shared-file surface small while two agents appended to `queries.ts`.
