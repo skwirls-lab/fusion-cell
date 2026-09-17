@@ -13,3 +13,8 @@
   instructions, but no seeded report contains an instruction and no test exercises it.
   Add a hostile report + eval question once a real model is available.
 - **Eval scoring is substring-based.** See DECISIONS.md D15.
+- **Supabase DB password appeared in git history.** DECISIONS.md D1 quoted it verbatim in
+  commit 062ec3a (redacted in the working tree since). No key or `.env.local` was ever
+  committed. Rotate the database password in Supabase → Project Settings → Database →
+  Reset database password, then update `DATABASE_URL` wherever it is set. Rewriting
+  history would also work but is optional once the password is rotated.

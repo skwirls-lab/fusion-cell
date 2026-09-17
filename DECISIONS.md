@@ -2,8 +2,8 @@
 
 ## 2026-09-17
 
-**D1 — DB password URL-encoding.** The Supabase password contains `@`
-(`zk2dw3h@JC87`). In a Postgres URI an unescaped `@` makes the parser read the
+**D1 — DB password URL-encoding.** The Supabase password contains `@`. In a
+Postgres URI an unescaped `@` makes the parser read the
 password as the start of the hostname. Encoded as `%40` in `DATABASE_URL`.
 Silent-failure class; worth knowing if the string is ever retyped by hand.
 
