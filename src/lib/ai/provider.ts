@@ -48,6 +48,8 @@ export interface CompleteRequest {
   messages: ChatMessage[];
   tools: ToolSpec[];
   temperature?: number;
+  /** Stop tears down the HTTP stream too, so tokens stop being billed mid-turn. */
+  signal?: AbortSignal;
 }
 
 export interface ChatProvider {
@@ -107,7 +109,7 @@ export class OpenRouterProvider implements ChatProvider {
       temperature: req.temperature,
       stream: true,
       stream_options: { include_usage: true },
-    });
+    }, { signal: req.signal });
 
     const pending = new Map<number, { id: string; name: string; args: string }>();
     let finishReason = 'stop';

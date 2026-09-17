@@ -2,88 +2,300 @@
   {
     "id": "lantern",
     "question": "Who is LANTERN, and what are they enabling?",
-    "mustMentionAny": [["Ilsa Varro", "Varro"]],
-    "mustMentionAll": ["Brightwater", "Tessaly"],
-    "mustMentionAny2": [["Hegemony", "raider"], ["Cartel"]],
-    "mustCiteAny": [["R-0019", "R-0042"], ["R-0031", "R-0047", "R-0011"]],
-    "mustNotClaim": ["Renley is LANTERN", "Doss Renley is LANTERN", "LANTERN is Renley"],
+    "mustMentionAny": [
+      [
+        "Ilsa Varro",
+        "Lt Cmdr Varro",
+        "Lieutenant Commander Varro",
+        "I. Varro",
+        "Commander Varro"
+      ]
+    ],
+    "mustMentionAll": [
+      "Brightwater",
+      "Tessaly"
+    ],
+    "mustMentionAny2": [
+      [
+        "Hegemony",
+        "raider"
+      ],
+      [
+        "Cartel"
+      ]
+    ],
+    "mustCiteAny": [
+      [
+        "R-0019",
+        "R-0042"
+      ],
+      [
+        "R-0031",
+        "R-0047",
+        "R-0011"
+      ]
+    ],
+    "mustNotClaim": [
+      "Renley is LANTERN",
+      "Doss Renley is LANTERN",
+      "LANTERN is Renley",
+      "LANTERN is Doss Renley",
+      "LANTERN is likely Renley",
+      "Renley leaked",
+      "Renley is leaking",
+      "Renley is the leak",
+      "no evidence Ilsa Varro",
+      "no evidence that Ilsa Varro",
+      "no evidence Varro",
+      "Varro is not LANTERN",
+      "Ilsa Varro is not LANTERN",
+      "cannot identify LANTERN",
+      "unable to identify LANTERN",
+      "LANTERN cannot be identified",
+      "LANTERN remains unidentified",
+      "insufficient evidence to identify LANTERN"
+    ],
     "required": true
   },
   {
     "id": "brightwater-money",
     "question": "What is Brightwater Hauling, and who has been paying them?",
-    "mustMentionAll": ["Tallow & Wick"],
-    "mustMentionAny": [["Cartel"]],
-    "mustCiteAny": [["R-0023"]]
+    "mustMentionAll": [
+      "Tallow & Wick"
+    ],
+    "mustMentionAny": [
+      [
+        "Cartel"
+      ]
+    ],
+    "mustCiteAny": [
+      [
+        "R-0023"
+      ]
+    ]
   },
   {
     "id": "renley-herring",
     "question": "Is Commander Doss Renley involved in leaking convoy schedules?",
-    "mustMentionAll": ["Renley", "Halloway"],
-    "mustMentionAny": [["no evidence", "unlikely", "not supported", "innocent", "official", "legitimate", "does not", "no indication", "insufficient"]],
-    "mustCiteAny": [["R-0053", "R-0049"]],
-    "mustNotClaim": ["Renley is LANTERN", "Renley is the leak", "Renley is leaking"]
+    "mustMentionAll": [
+      "Renley",
+      "Halloway"
+    ],
+    "mustMentionAny": [
+      [
+        "no evidence",
+        "unlikely",
+        "not supported",
+        "innocent",
+        "official",
+        "legitimate",
+        "does not",
+        "no indication",
+        "insufficient"
+      ]
+    ],
+    "mustCiteAny": [
+      [
+        "R-0053",
+        "R-0049"
+      ]
+    ],
+    "mustNotClaim": [
+      "Renley is LANTERN",
+      "Renley is the leak",
+      "Renley is leaking",
+      "Renley leaked",
+      "Renley is leaking",
+      "Renley is likely LANTERN",
+      "Renley is probably LANTERN"
+    ]
   },
   {
     "id": "halloway-herring",
     "question": "Why did a Cartel-linked account pay Halloway & Sons Trading?",
-    "mustMentionAny": [["salvage", "hull recovery"]],
-    "mustMentionAny2": [["legitimate", "licensed", "consistent"]],
-    "mustCiteAny": [["R-0038"]]
+    "mustMentionAny": [
+      [
+        "salvage",
+        "hull recovery"
+      ]
+    ],
+    "mustMentionAny2": [
+      [
+        "legitimate",
+        "licensed",
+        "consistent"
+      ]
+    ],
+    "mustCiteAny": [
+      [
+        "R-0038"
+      ]
+    ]
   },
   {
     "id": "raiders",
     "question": "Where is the Vantor 9th Raider Group and what is it doing?",
-    "mustMentionAny": [["Threnody", "Dusk Road"]],
-    "mustMentionAll": ["Tessaly"],
-    "mustCiteAny": [["R-0071", "R-0077"]]
+    "mustMentionAny": [
+      [
+        "Threnody",
+        "Dusk Road"
+      ]
+    ],
+    "mustMentionAll": [
+      "Tessaly"
+    ],
+    "mustCiteAny": [
+      [
+        "R-0071",
+        "R-0077"
+      ]
+    ]
   },
   {
     "id": "convoy-route",
     "question": "What is Convoy 7's route and when does it transit Tessaly Gate?",
-    "mustMentionAll": ["Tessaly Gate"],
-    "mustMentionAny": [["31 AUG", "31 August", "August 31", "day 31", "2026-08-31"]],
-    "mustCiteAny": [["R-0068"]]
+    "mustMentionAll": [
+      "Tessaly Gate"
+    ],
+    "mustMentionAny": [
+      [
+        "31 AUG",
+        "31 August",
+        "August 31",
+        "day 31",
+        "2026-08-31"
+      ]
+    ],
+    "mustCiteAny": [
+      [
+        "R-0068"
+      ]
+    ]
   },
   {
     "id": "cinder-moth",
     "question": "Explain the CV Cinder Moth transponder gaps.",
-    "mustMentionAll": ["Dusk Road"],
-    "mustMentionAny": [["Brightwater"]],
-    "mustCiteAny": [["R-0007", "R-0064"]]
+    "mustMentionAll": [
+      "Dusk Road"
+    ],
+    "mustMentionAny": [
+      [
+        "Brightwater"
+      ]
+    ],
+    "mustCiteAny": [
+      [
+        "R-0007",
+        "R-0064"
+      ]
+    ]
   },
   {
     "id": "ansel",
     "question": "Who is Ansel Varro and why did he receive money from Brightwater Hauling?",
-    "mustMentionAny": [["brother", "sibling", "next of kin", "family"]],
-    "mustMentionAll": ["Ilsa"],
-    "mustCiteAny": [["R-0031"], ["R-0003"]]
+    "mustMentionAny": [
+      [
+        "brother",
+        "sibling",
+        "next of kin",
+        "family"
+      ]
+    ],
+    "mustMentionAll": [
+      "Ilsa"
+    ],
+    "mustCiteAny": [
+      [
+        "R-0031"
+      ],
+      [
+        "R-0003"
+      ]
+    ]
   },
   {
     "id": "convoy-threat",
     "question": "What threats to Concord Convoy 7 exist right now?",
-    "mustMentionAny": [["ambush", "interdict", "raider"]],
-    "mustMentionAll": ["Tessaly"],
-    "mustCiteAny": [["R-0077", "R-0071", "R-0042"]]
+    "mustMentionAny": [
+      [
+        "ambush",
+        "interdict",
+        "raider"
+      ]
+    ],
+    "mustMentionAll": [
+      "Tessaly"
+    ],
+    "mustCiteAny": [
+      [
+        "R-0077",
+        "R-0071",
+        "R-0042"
+      ]
+    ]
   },
   {
     "id": "tallow-row-meeting",
     "question": "Who met Petra Lindqvist on Tallow Row on 3 August?",
-    "mustMentionAny": [["Varro"]],
-    "mustMentionAny2": [["Lieutenant Commander", "Lt Cmdr", "logistics"]],
-    "mustCiteAny": [["R-0047"], ["R-0011"]]
+    "mustMentionAny": [
+      [
+        "Varro"
+      ]
+    ],
+    "mustMentionAny2": [
+      [
+        "Lieutenant Commander",
+        "Lt Cmdr",
+        "logistics"
+      ]
+    ],
+    "mustCiteAny": [
+      [
+        "R-0047"
+      ],
+      [
+        "R-0011"
+      ]
+    ]
   },
   {
     "id": "tallow-wick",
     "question": "What does Tallow & Wick Provisions actually do?",
-    "mustMentionAny": [["front", "shell", "Cartel"]],
-    "mustCiteAny": [["R-0023"]]
+    "mustMentionAny": [
+      [
+        "front",
+        "shell",
+        "Cartel"
+      ]
+    ],
+    "mustCiteAny": [
+      [
+        "R-0023"
+      ]
+    ]
   },
   {
     "id": "hegemony-tessaly",
     "question": "Summarize Hegemony activity near Tessaly Gate this month.",
-    "mustMentionAny": [["seven", "7 hulls", "7 raider"]],
-    "mustMentionAny2": [["Ironvale", "Duskwarden", "Threnody"]],
-    "mustCiteAny": [["R-0071", "R-0077"]]
+    "mustMentionAny": [
+      [
+        "seven",
+        "7 hulls",
+        "7 raider"
+      ]
+    ],
+    "mustMentionAny2": [
+      [
+        "Ironvale",
+        "Duskwarden",
+        "Threnody"
+      ]
+    ],
+    "mustCiteAny": [
+      [
+        "R-0071",
+        "R-0077"
+      ]
+    ]
   }
 ]

@@ -149,7 +149,7 @@ export async function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
 
     while (!finalTurn) {
       checkAborted();
-      const turn = await collectTurn(provider.complete({ messages, tools: specs, temperature: opts.temperature }));
+      const turn = await collectTurn(provider.complete({ messages, tools: specs, temperature: opts.temperature, signal }));
       if (turn.usage) result.usage = turn.usage;
 
       if (!turn.toolCalls.length) {
@@ -181,7 +181,7 @@ export async function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
       messages.push({ role: 'system', content: FORCE_ANSWER_NUDGE });
       // Tools are withheld, so nothing here can precede a tool call: stream live.
       finalTurn = await collectTurn(
-        provider.complete({ messages, tools: [], temperature: opts.temperature }),
+        provider.complete({ messages, tools: [], temperature: opts.temperature, signal }),
         (delta) => send({ type: 'token', delta }),
       );
       if (finalTurn.usage) result.usage = finalTurn.usage;

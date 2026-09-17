@@ -69,3 +69,22 @@ tunnel failures, 407, and socket errors count.
 **D13 — Seed loading lives in `src/lib/db/seed.ts`.** Factored out of the script so
 the agent-loop unit tests run against the *real* seed in an in-memory PGlite, not a
 fixture. The 11 agent tests exercise real tools over real data with a scripted model.
+
+**D14 — Review round 1 (end of Phases 4+5).** A fresh-context reviewer found no
+fabricated data and no critical defects, and three gates that passed for weaker
+reasons than their names: feed order never asserted; map→graph highlight satisfied by
+the clicked node alone; eval scorer accepting a hedged denial. All three were fixed
+before the phase commit, as §4 requires. Accepted as-is, deliberately:
+- The three always-on suggested prompts in the analyst panel are scenario copy
+  ("Who is LANTERN…"). They are UI text for this dataset, not displayed data. If the
+  seed changes, change them.
+- Scenario epoch (2026-08-01) and the filter window bounds are story-bible constants.
+- `__fusionMap` / `__fusionCy` test seams are stripped in production, so `e2e/` runs
+  against `next dev`, not the deployed URL. The DoD's deploy check is `/api/health`.
+- Stop now aborts the HTTP stream (L8 fixed), so a stopped turn stops billing.
+
+**D15 — LANTERN eval requires "Ilsa Varro" by name and fails on hedged denials.**
+"Varro" alone matched Ansel; "there is no evidence Ilsa Varro is LANTERN" passed
+every substring criterion. `mustMentionAny` now needs Ilsa specifically and
+`mustNotClaim` lists the denial phrasings. Substring scoring is still crude; the
+right fix once a real model runs is an LLM-judged rubric on the Bottom line section.
