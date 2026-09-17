@@ -45,3 +45,27 @@ Tailwind 4 with `@theme` tokens covers everything the PRD's visual language need
 `pkill`/`kill` exits 144 silently, taking the whole call with it. Dev servers are
 started as harness background tasks and stopped with the harness's TaskStop. Not an
 application concern; recorded so the next session doesn't re-discover it.
+
+**D9 — Nine analyst tools.** The eight in BUILD.md §9 plus `compute_centrality`
+(PRD §7). It is cheap (Brandes over ~440 edges) and it is the tool that answers
+"who is the broker", which the LANTERN question needs.
+
+**D10 — A "step" is one provider turn that executed tool calls.** Parallel calls
+in one turn share a step. After 8 steps, one more call is allowed; if the model
+still wants tools, that request is dropped, a `limit` event is emitted, and a final
+tools-disabled call with a system nudge produces an answer. The user always gets an
+answer; the UI shows the limit notice.
+
+**D11 — Final-answer tokens are buffered per turn.** Narration the model emits
+before a tool call is never shown as the answer. Cost: no live token streaming
+until the final turn (the trace streams live instead). Revisit once a real model is
+in the loop — some models narrate usefully, some don't.
+
+**D12 — `isNetworkBlocked` matches the proxy's wording, not bare 403.** OpenRouter
+uses 403 for real permission errors; treating any 403 as "network blocked" would
+hide a bad key behind exit 3. Only the egress proxy's "not in allowlist", CONNECT/
+tunnel failures, 407, and socket errors count.
+
+**D13 — Seed loading lives in `src/lib/db/seed.ts`.** Factored out of the script so
+the agent-loop unit tests run against the *real* seed in an in-memory PGlite, not a
+fixture. The 11 agent tests exercise real tools over real data with a scripted model.

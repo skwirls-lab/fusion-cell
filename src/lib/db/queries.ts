@@ -434,3 +434,41 @@ export async function search(db: Db, q: z.infer<typeof SearchQuery>): Promise<Se
     reports: reps.map((r) => ({ ...r, reportedAt: r.reportedAt.toISOString() })),
   };
 }
+
+// ---- AI analyst helpers ------------------------------------------------------
+// Appended for the Phase 5 tools. Same style as above: one grouped query per
+// result set, results shaped to the contract types.
+
+export type EntityHead = Pick<Entity, 'id' | 'name' | 'type' | 'factionId'>;
+
+/** Compact id/name/type lookup used to label graph results for the model. */
+export async function entityHeadsByIds(db: Db, ids: string[]): Promise<EntityHead[]> {
+  if (!ids.length) return [];
+  return db
+    .select({ id: entities.id, name: entities.name, type: entities.type, factionId: entities.factionId })
+    .from(entities)
+    .where(inArray(entities.id, ids))
+    .orderBy(asc(entities.name));
+}
+
+/** Every event any of `entityIds` took part in, oldest first, with provenance. */
+export async function getTimeline(db: Db, entityIds: string[]): Promise<Event[]> {
+  if (!entityIds.length) return [];
+  const rows = await db
+    .selectDistinctOn([events.occurredAt, events.id], { ev: events })
+    .from(eventEntities)
+    .innerJoin(events, eq(events.id, eventEntities.eventId))
+    .where(inArray(eventEntities.entityId, entityIds))
+    .orderBy(asc(events.occurredAt), asc(events.id));
+  return hydrateEvents(db, rows.map((r) => r.ev));
+}
+
+/** Which of `numbers` are real report numbers. One query; used by citation validation. */
+export async function existingReportNumbers(db: Db, numbers: string[]): Promise<Set<string>> {
+  if (!numbers.length) return new Set();
+  const rows = await db
+    .select({ reportNumber: reports.reportNumber })
+    .from(reports)
+    .where(inArray(reports.reportNumber, numbers));
+  return new Set(rows.map((r) => r.reportNumber));
+}
