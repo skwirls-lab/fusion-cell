@@ -2,22 +2,30 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BellIcon, UserIcon } from './icons';
+import { UserIcon } from './icons';
 import GlobalSearch from '@/components/search';
+import AlertBell from '@/components/alerts/Bell';
 import { useReports } from '@/lib/client/api';
-import { scenarioDay } from '@/lib/client/format';
+import { useSelection } from '@/stores/selection';
+import { formatDtg, scenarioDay } from '@/lib/client/format';
 
-/** "SCENARIO DAY N": the newest report's date relative to 2026-08-01 (day 1). */
+/**
+ * "SCENARIO DAY N": the newest report's date relative to 2026-08-01 (day 1).
+ * While the timeline holds a cutoff (filters.to) the clock follows the cursor
+ * instead, so a replay reads as the day it is showing.
+ */
 function ScenarioClock() {
+  const to = useSelection((s) => s.filters.to);
   const latest = useReports({ limit: 1, refetchInterval: 30_000 });
   const newest = latest.data?.reports[0]?.reportedAt;
-  const day = newest ? scenarioDay(newest) : null;
+  const day = to ? scenarioDay(to) : newest ? scenarioDay(newest) : null;
   return (
     <span
-      className="font-mono text-[11px] tracking-wider text-muted"
-      title={newest ? `Newest report: ${newest}` : 'Waiting for the first report'}
+      className={to ? 'font-mono text-[11px] tracking-wider text-cartel' : 'font-mono text-[11px] tracking-wider text-muted'}
+      title={to ? `Replay cutoff: ${formatDtg(to)}` : newest ? `Newest report: ${newest}` : 'Waiting for the first report'}
       data-testid="scenario-clock"
       data-day={day ?? undefined}
+      data-replay={to ? 'true' : undefined}
     >
       SCENARIO DAY {day ?? '—'}
     </span>
@@ -62,13 +70,7 @@ export function TopBar() {
       <div className="flex items-center gap-3">
         <ScenarioClock />
 
-        <button
-          type="button"
-          aria-label="Alerts"
-          className="relative flex h-7 w-7 items-center justify-center rounded text-muted hover:bg-panel-2 hover:text-text"
-        >
-          <BellIcon />
-        </button>
+        <AlertBell />
 
         <div ref={menuRef} className="relative">
           <button

@@ -208,6 +208,8 @@ export default function DeckMap() {
       id: 'events', data: eventData, visible: toggles.events, pickable: true,
       getPosition: (d) => d.position, getRadius: 3.5, radiusUnits: 'pixels',
       getFillColor: (d) => [...d.color, 217], stroked: true, getLineColor: [7, 11, 20, 200], lineWidthUnits: 'pixels', getLineWidth: 0.75,
+      // Markers revealed by the timeline replay grow in (PRD §8); nothing moves under reduced motion.
+      transitions: reduced ? undefined : { getRadius: { duration: 250, enter: () => [0] } },
     }),
     new ScatterplotLayer<LocationDatum>({
       id: 'locations', data: locations, visible: toggles.locations, pickable: true,
@@ -219,7 +221,7 @@ export default function DeckMap() {
       getPosition: (d) => d.position, getRadius: (d) => d.radius, radiusUnits: 'pixels',
       filled: false, stroked: true, getLineColor: [...WHITE, 230], lineWidthUnits: 'pixels', getLineWidth: 1.5,
     }),
-  ], [lanes, locations, eventData, selectionRings, toggles.lanes, toggles.events, toggles.locations]);
+  ], [lanes, locations, eventData, selectionRings, toggles.lanes, toggles.events, toggles.locations, reduced]);
   const aiLayer = useMemo(() => new ScatterplotLayer<RingDatum>({
     id: 'highlight-ai', data: aiRings,
     getPosition: (d) => d.position, getRadius: (d) => d.radius + pulse * 4, radiusUnits: 'pixels',

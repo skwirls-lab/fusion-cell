@@ -6,6 +6,7 @@ import { CenterSplit } from './CenterSplit';
 import { RightPanel } from './RightPanel';
 import { BottomDrawer } from './BottomDrawer';
 import ReportReader from '@/components/feed/ReportReader';
+import Toaster from '@/components/alerts/Toaster';
 import { useShortcuts } from '@/hooks/useShortcuts';
 import { useUrlSync } from '@/hooks/useUrlSync';
 
@@ -31,6 +32,7 @@ export function Workspace() {
         <RightPanel />
       </div>
       <ReportReader />
+      <Toaster />
     </div>
   );
 }

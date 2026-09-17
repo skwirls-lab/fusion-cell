@@ -1,0 +1,20 @@
+/* Replay cursor. The thumb is driven per frame by React; only the range input's own thumb is styled here. */
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: ew-resize;
+  margin: 0;
+}
+.range::-webkit-slider-runnable-track { height: 100%; background: transparent; }
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 100%;
+  background: transparent;
+}
+.range::-moz-range-track { height: 100%; background: transparent; }
+.range::-moz-range-thumb { width: 10px; height: 100%; background: transparent; border: 0; border-radius: 0; }
+.range:focus-visible { outline: none; }
+.range:focus-visible + .cursor { box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-concord) 45%, transparent); }

@@ -20,6 +20,9 @@ export function formatDtgFull(iso: string): string {
 
 /** Scenario day: day 1 is 2026-08-01 (story bible). Null when the date is unparseable. */
 export const SCENARIO_EPOCH = Date.UTC(2026, 7, 1);
+/** End of the 30-day scenario window (exclusive): the timeline scrubber's right edge. */
+export const SCENARIO_END = Date.UTC(2026, 7, 31);
+export const SCENARIO_DAYS = 30;
 export function scenarioDay(iso: string): number | null {
   const t = new Date(iso).getTime();
   if (Number.isNaN(t)) return null;

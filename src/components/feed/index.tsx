@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useSelection } from '@/stores/selection';
+import { useWatchlist } from '@/stores/watchlist';
 import { useGraph, useReports } from '@/lib/client/api';
 import { EmptyState, ErrorState, ReportTypeBadge, Skeleton } from '@/lib/client/chips';
 import { formatDtg } from '@/lib/client/format';
@@ -24,20 +25,36 @@ export function FeedView() {
   const graph = useGraph();
   const nameOf = useMemo(() => new Map((graph.data?.nodes ?? []).map((n) => [n.id, n.name])), [graph.data]);
 
-  // Rows not seen on a previous poll glow for GLOW_MS. The first page never glows.
+  // Rows not seen before "arrive": they glow for GLOW_MS and, if they name a watched entity,
+  // raise an alert (PRD §5.10). A row is new when a poll brings it (ingest) or the replay
+  // cursor advances over it. The first page never counts, and neither does what shows up
+  // after a rewind or a reset to live: the baseline is re-taken there instead, so replaying
+  // from day 1 alerts on the way forward and jumping back to "now" alerts on nothing.
   const seen = useRef<Set<string> | null>(null);
+  const rebaseline = useRef(false);
+  const prevTo = useRef<string | null | undefined>(undefined);
+  if (prevTo.current !== undefined && to !== prevTo.current && (to === null || prevTo.current === null || to < prevTo.current)) rebaseline.current = true;
+  prevTo.current = to;
   const [fresh, setFresh] = useState<Set<string>>(() => new Set());
   useEffect(() => {
     const rows = q.data?.reports;
     if (!rows) return;
-    if (seen.current === null) { seen.current = new Set(rows.map((r) => r.id)); return; }
-    const added = rows.filter((r) => !seen.current!.has(r.id)).map((r) => r.id);
+    if (seen.current === null || rebaseline.current) { seen.current = new Set(rows.map((r) => r.id)); rebaseline.current = false; return; }
+    const addedRows = rows.filter((r) => !seen.current!.has(r.id));
+    const added = addedRows.map((r) => r.id);
     for (const id of added) seen.current.add(id);
-    if (!added.length || prefersReducedMotion()) return;
+    if (!added.length) return;
+    const wl = useWatchlist.getState();
+    if (wl.entityIds.length) {
+      for (const r of addedRows) for (const id of r.entityIds) {
+        if (wl.has(id)) wl.pushAlert({ entityId: id, entityName: nameOf.get(id) ?? id, reportNumber: r.reportNumber, reportTitle: r.title });
+      }
+    }
+    if (prefersReducedMotion()) return;
     setFresh((s) => new Set([...s, ...added]));
     const t = window.setTimeout(() => setFresh((s) => { const n = new Set(s); for (const id of added) n.delete(id); return n; }), GLOW_MS);
     return () => window.clearTimeout(t);
-  }, [q.data]);
+  }, [q.data, nameOf]);
 
   if (q.isPending) return <Skeleton rows={6} />;
   if (q.error) return <ErrorState error={q.error} retry={() => void q.refetch()} />;

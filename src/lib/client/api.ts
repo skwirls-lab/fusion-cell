@@ -9,7 +9,7 @@
  * render. The contract module is imported lazily so the production bundle
  * never carries it (it transitively pulls the Drizzle schema).
  */
-import { useQuery, type QueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, type QueryClient } from '@tanstack/react-query';
 import type {
   Entity, EntityProfile, Event, Faction, Graph, PathResult, Report, ReportSummary, SearchResult,
 } from '@/lib/types';
@@ -129,12 +129,17 @@ export function useEntityProfile(id: string | null) {
   });
 }
 
-/** Events under the shared filters. bbox is accepted by the API but the map shows the whole theatre. */
+/**
+ * Events under the shared filters. bbox is accepted by the API but the map shows the whole theatre.
+ * The previous result stays on screen while a new filter key loads, so a timeline replay
+ * (a new `to` every few hundred ms) never blanks the map between steps.
+ */
 export function useEvents(filters: Filters) {
   const params = filtersToParams(filters);
   return useQuery({
     queryKey: ['events', params],
     queryFn: () => apiGet<{ events: Event[] }>('/api/events', params, 'events').then((r) => r.events),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -156,6 +161,7 @@ export function useReports(opts: ReportListOptions = {}) {
     queryKey: ['reports', params],
     queryFn: () => apiGet<{ reports: ReportSummary[]; total: number }>('/api/reports', params, 'reports'),
     refetchInterval,
+    placeholderData: keepPreviousData,
   });
 }
 

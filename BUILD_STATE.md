@@ -91,3 +91,10 @@ this environment, or run the network-gated phases from a laptop.
 - reported_at is now analyst-set in the review header, default event_at ?? now (D21)
 - note: real-model extraction/drafting cannot be exercised here (B1); each flow gets a
   dev-only `manual` seam (404 in production) so review/commit/edit UIs are e2e-tested honestly.
+
+## Phase 7 — Polish  [IN_PROGRESS]
+- [x] Timeline scrubber + replay (MAP-7, §5.5): density strip, play/pause, 1×/4×/12×, reset, replay from day 1, Space toggle, reduced-motion stepping; clock follows the cursor (D23)   unit 5, e2e 3
+- [x] Watchlist + alerts (§5.10): profile star, feed detection on arrival/replay, toasts, bell badge + dropdown, localStorage (D24)   unit 4, e2e 1
+- [x] Motion audit (§8): tab fade, drawer collapse, toast slide-in, replayed markers grow in; all reduced-motion gated (D25)
+- [x] Gates: tsc; vitest 98/98; playwright 26/26 (zero console errors); next build
+- [ ] Empty/loading/error states audit across every panel; keyboard shortcut audit (remaining Phase 7 items)

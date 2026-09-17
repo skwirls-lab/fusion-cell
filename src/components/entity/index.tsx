@@ -4,6 +4,7 @@
 import { useMemo } from 'react';
 import { DEFAULT_FILTERS, useSelection } from '@/stores/selection';
 import { useUiStore } from '@/stores/ui';
+import { useWatchlist } from '@/stores/watchlist';
 import { useEntityProfile, useEvents, useGraph } from '@/lib/client/api';
 import { Chip, EmptyState, ErrorState, FactionChip, ReportTypeBadge, Skeleton, TypeBadge } from '@/lib/client/chips';
 import { confidencePct, formatDtg, formatDtgFull } from '@/lib/client/format';
@@ -45,6 +46,29 @@ function EntityProfileView({ id }: { id: string }) {
   );
 }
 
+/** Watchlist toggle (PRD §5.4 header, §5.10): a starred entity raises an alert when a report naming it arrives. */
+function WatchStar({ id, name }: { id: string; name: string }) {
+  const watched = useWatchlist((s) => s.entityIds.includes(id));
+  const toggle = useWatchlist((s) => s.toggle);
+  return (
+    <button
+      type="button"
+      onClick={() => toggle(id)}
+      aria-pressed={watched}
+      aria-label={watched ? `Remove ${name} from watchlist` : `Add ${name} to watchlist`}
+      title={watched ? 'On watchlist — click to remove' : 'Add to watchlist: alert me when a report names this entity'}
+      data-testid="watchlist-toggle"
+      className={watched
+        ? 'flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-cartel/60 bg-cartel/15 text-cartel'
+        : 'flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-border text-muted hover:border-cartel/60 hover:text-cartel'}
+    >
+      <svg width="11" height="11" viewBox="0 0 24 24" aria-hidden="true" fill={watched ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+        <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z" />
+      </svg>
+    </button>
+  );
+}
+
 function Header({ p }: { p: EntityProfile }) {
   const setPrefill = useSelection((s) => s.setAnalystPrefill);
   const setRightTab = useUiStore((s) => s.setRightTab);
@@ -53,7 +77,10 @@ function Header({ p }: { p: EntityProfile }) {
     <div className="border-b border-border px-3 py-2">
       <div className="flex items-start justify-between gap-2">
         <h2 className="text-[14px] font-semibold leading-tight text-text" data-testid="entity-name">{e.name}</h2>
-        <TypeBadge>{e.type}{e.locationKind ? ` · ${e.locationKind}` : ''}</TypeBadge>
+        <span className="flex shrink-0 items-center gap-1.5">
+          <TypeBadge>{e.type}{e.locationKind ? ` · ${e.locationKind}` : ''}</TypeBadge>
+          <WatchStar id={e.id} name={e.name} />
+        </span>
       </div>
       <div className="mt-1 flex flex-wrap items-center gap-1.5">
         <FactionChip factionId={e.factionId} name={p.faction?.name} />

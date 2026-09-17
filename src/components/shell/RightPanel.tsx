@@ -59,7 +59,7 @@ export function RightPanel() {
             aria-labelledby={`right-tab-${t.id}`}
             aria-hidden={!active}
             hidden={!active}
-            className="min-h-0 flex-1 overflow-y-auto"
+            className="panel-in min-h-0 flex-1 overflow-y-auto"
           >
             {t.id === 'entity' ? <EntityPanel /> : <AnalystPanel />}
           </div>

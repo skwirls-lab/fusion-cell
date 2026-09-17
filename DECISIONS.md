@@ -135,3 +135,23 @@ after an ingest in the e2e.
 
 **D22 — Ingest job CRUD lives in `src/lib/ingest/jobs.ts`,** not `queries.ts`, to
 keep the shared-file surface small while two agents appended to `queries.ts`.
+
+**D23 — Scenario replay is the timeline cursor writing `filters.to`.** No admin
+release endpoint, no server clock: the scrubber (`src/components/timeline`) sets
+the shared cutoff and every view that already honours the filters is cut off there.
+Pushes are quantized to a 2-hour grid and throttled to ~3/s; `useEvents`/`useReports`
+keep the previous page while a step loads so the map never blanks mid-replay.
+"Replay from day 1" rewinds and plays in one click (the demo moment); the top-bar
+clock follows the cursor while a cutoff is active.
+
+**D24 — Watchlist and alerts live in localStorage,** not the `watchlist`/`alerts`
+tables the PRD sketches: one shared password means one user, and a client store
+(`src/stores/watchlist.ts`) keeps the feature honest without a schema change.
+Alerts are keyed `(report, entity)` and never fire twice; a rewind or a reset to
+live re-takes the feed's "seen" baseline so jumping back to now alerts on nothing.
+
+**D25 — Motion audit (PRD §8):** feed glow, map/graph AI pulses and the path
+sequence already existed and were gated; added a 160ms tab fade, a 200ms drawer
+collapse, a toast slide-in and a 250ms grow-in for map events revealed by the
+replay. All collapse under `prefers-reduced-motion`; the cursor then steps on
+the 2-hour grid instead of moving per frame.

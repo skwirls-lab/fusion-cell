@@ -1,0 +1,6 @@
+/* Toast slide-in (PRD §8: purposeful motion). The global reduced-motion rule collapses the duration. */
+@keyframes toastIn {
+  from { transform: translateX(12px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+.toast { animation: toastIn 180ms ease-out; }
