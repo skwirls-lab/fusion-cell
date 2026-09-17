@@ -26,6 +26,7 @@ offline; the analyst needs `OPENROUTER_API_KEY`.
 ```bash
 npm run smoke:model     # tool-calling / streaming / JSON checks against OpenRouter
 node scripts/smoke-model-raw.mjs   # same five checks with zero dependencies (no node_modules needed)
+node scripts/smoke-model-raw.mjs --no-fallback   # only the configured model; never tries a pricier one
 npm run evals           # 12 scenario questions incl. "Who is LANTERN?"; needs ≥ 9/12
 ```
 

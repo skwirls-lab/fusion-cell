@@ -27,8 +27,13 @@ if (process.env.HTTPS_PROXY && process.env.NODE_USE_ENV_PROXY !== '1') {
 const ENV_FILE = '.env.local';
 if (fs.existsSync(ENV_FILE)) {
   for (const line of fs.readFileSync(ENV_FILE, 'utf8').split('\n')) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
-    if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+    const m = line.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+    if (!m || process.env[m[1]] !== undefined) continue;
+    let v = m[2].trim();
+    const q = v.match(/^(["'`])([\s\S]*?)\1/);
+    if (q) v = q[2];                       // quoted: keep verbatim
+    else v = v.replace(/\s+#.*$/, '').trim(); // unquoted: drop an inline comment, like dotenv
+    process.env[m[1]] = v;
   }
 }
 
@@ -43,7 +48,9 @@ if (/[^\x21-\x7e]/.test(API_KEY) || API_KEY.length < 32) {
 // Keep in step with scripts/smoke-model.ts. OpenRouter ids carry a vendor
 // prefix; the bare id the human gave us is tried as written, then prefixed.
 const configured = process.env.OPENROUTER_MODEL ?? 'deepseek/deepseek-v4-flash-0731';
-const MODEL_CANDIDATES = [...new Set([
+// --no-fallback: test only the configured model, never a pricier one.
+const NO_FALLBACK = process.argv.includes('--no-fallback');
+const MODEL_CANDIDATES = [...new Set(NO_FALLBACK ? [configured] : [
   configured,
   configured.includes('/') ? configured : `deepseek/${configured}`,
   'deepseek/deepseek-v4-pro',
@@ -178,7 +185,7 @@ function writeModel(model) {
 
 const failures = {};
 for (const model of MODEL_CANDIDATES) {
-  console.log(`\n=== ${model} ===`);
+  console.log(`\n=== "${model}" ===`);
   const failed = [];
   for (const check of CHECKS) {
     const notes = [];
@@ -191,7 +198,10 @@ for (const model of MODEL_CANDIDATES) {
       failed.push(check.name);
       console.log(`FAIL  ${check.name}  [${model}]  ${e.message}${notes.length ? `  (${notes.join('; ')})` : ''}`);
       if (/HTTP 401/.test(e.message)) { console.error('\nOpenRouter rejected the API key (401) — fix OPENROUTER_API_KEY before anything else'); process.exit(2); }
-      if (/HTTP 40[04]/.test(e.message)) { console.log(`      model not available on this account — skipping remaining checks`); failed.push('(unavailable)'); break; }
+      if (/HTTP 404/.test(e.message) || (/HTTP 400/.test(e.message) && /model/i.test(e.message))) {
+        console.log(`      OpenRouter rejected the model id "${model}" (see the message above) — skipping its remaining checks`);
+        failed.push('(rejected model id)'); break;
+      }
     }
   }
   if (!failed.length) {
@@ -201,6 +211,6 @@ for (const model of MODEL_CANDIDATES) {
   }
   failures[model] = failed;
 }
-console.error('\nP0.2 (raw) FAIL — no candidate passed every check:');
+console.error(`\nP0.2 (raw) FAIL — no candidate passed every check${NO_FALLBACK ? ' (fallbacks disabled)' : ''}:`);
 for (const [m, f] of Object.entries(failures)) console.error(`  ${m}: failed ${f.join(', ')}`);
 process.exit(2);
