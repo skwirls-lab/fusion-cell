@@ -254,3 +254,16 @@ report reader → blur the field → clear the selection. Not done: a loading/er
 the alerts dropdown (it reads a local store), arrow-key map panning after `M`, and
 Ctrl+Enter no longer sends in the analyst box (plain Enter does). A failed feed poll still
 replaces the rows with the error state until the next poll.
+
+**D34 — Production uses Supabase's transaction pooler (6543), not the session pooler (5432).**
+BUILD.md §1 chose the session pooler to avoid exhausting direct connections; on Vercel it
+exhausts itself instead: the session pooler admits `pool_size` = 15 clients, each concurrent
+function instance holds its own `pg` pool, and the workspace fires eight requests on load, so
+12 parallel calls to one route produced six `[XX000] (EMAXCONNSESSION) max clients reached in
+session mode` 500s. Transaction mode multiplexes hundreds of clients. Verified against it from
+the laptop: check-schema, check-seed, check-api 20/20, check-auth, the one-transaction ingest
+commit with its `pg_advisory_xact_lock` (transaction-scoped, so it is safe there), and reseed.
+Nothing in the app relies on session state (no SET, LISTEN or named prepared statements). The
+earlier `ETIMEDOUT` was a different mistake: the API URL `https://<ref>.supabase.co` had been
+pasted into `DATABASE_URL`. Both are now diagnosable from the outside: `/api/health` and every
+API 500 body carry the error cause chain, and the pool fails a connection after 10 s.

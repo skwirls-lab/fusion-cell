@@ -45,15 +45,14 @@ npm run test:e2e        # Playwright: shell + views
 ## Deploy (Vercel + Supabase, free tiers)
 
 1. **Supabase**: create a project. Run migrations against it once:
-   `DATABASE_URL=<session pooler url> npm run migrate && npm run seed:load`
-   (use the *session pooler* connection string, port 5432; URL-encode `@` in the
-   password as `%40`).
+   `DATABASE_URL=<pooler url> npm run migrate && npm run seed:load`
+   (URL-encode `@` in the password as `%40`). Either pooler string works from a laptop.
 2. **Vercel**: import the GitHub repo. Set these Environment Variables in the
    project (Production + Preview):
 
    | Variable | Value |
    |---|---|
-   | `DATABASE_URL` | Supabase session-pooler URL |
+   | `DATABASE_URL` | Supabase **transaction pooler** URL — port **6543**, `postgresql://postgres.<ref>:<pw>@aws-0-<region>.pooler.supabase.com:6543/postgres`. Not the session pooler (5432): it allows 15 clients and each concurrent function instance is a client, so the workspace's parallel requests 500 with `max clients reached in session mode`. Not the direct `db.<ref>.supabase.co` host: IPv6-only, times out from Vercel. |
    | `OPENROUTER_API_KEY` | your key (set a credit limit on it) |
    | `OPENROUTER_MODEL` | `deepseek/deepseek-v4-flash-0731` (vendor prefix required; or whatever `smoke:model` picked) |
    | `APP_PASSWORD` | the shared password |

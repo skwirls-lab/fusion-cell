@@ -1,16 +1,12 @@
 # Known Issues
 
 ## Needs the human
-- **Deployed URL is behind Vercel Authentication and unverified.** The production build now
-  succeeds (DECISIONS.md D32), but every `*.vercel.app` URL for the project answers 302 to
-  Vercel SSO, and the Vercel CLI on the laptop is not logged in, so `/api/health` on the
-  deployment could not be checked and the project's env vars could not be set or inspected
-  from here. To finish: `npx vercel login`; set the variables in the README table for
-  Production and Preview; turn off Deployment Protection for Production (Project → Settings →
-  Deployment Protection) or use a custom domain; then
-  `curl https://<production-url>/api/health` should report `driver: "pg"`, 169 entities,
-  80 reports. Supabase itself is migrated, seeded and verified (`check-schema`, `check-seed`
-  green on the `pg` driver).
+- **`DATABASE_URL` on Vercel must be the transaction pooler (port 6543).** With the session
+  pooler the workspace's parallel requests hit the 15-client limit and panels 500
+  intermittently (D34). Change the port in the Vercel env var and redeploy; `/api/health`
+  and the API 500 bodies name the cause if anything else is wrong. The deployment at
+  https://fusion-cell-skwirls-projects.vercel.app serves the app behind the password and
+  `/api/health` reports `driver: "pg"`, 169 entities, 80 reports.
 - **The app password is the test default and the repo is public.** `APP_PASSWORD` in
   `.env.local` equals the specs' fallback, which is in `e2e/*.spec.ts`. Set a different value
   in Vercel (the specs read `APP_PASSWORD` from `.env.local`, so local tests follow whatever

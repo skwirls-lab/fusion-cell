@@ -43,7 +43,7 @@ Blocked: no. B1–B4 from the remote sandbox do not apply on the laptop and are 
 - [x] P1.3 Password proxy — check-auth 6/6                                     attempts: 1 (subagent)
 - [x] P1.4 /api/health real DB round-trip                                      attempts: 1 (subagent)
 - [x] P1.5 App shell + banners — e2e/shell.spec.ts 1/1, zero console errors    attempts: 1 (subagent)
-- [~] P1.6 Vercel deploy + env vars                                            build fixed (D32), deployment = success; env vars and the /api/health check need `vercel login` (KNOWN_ISSUES)
+- [x] P1.6 Vercel deploy + env vars                                            build fixed (D32); env vars set by the human; /api/health ok on driver pg; pooler port → 6543 (D34)
 
 ## Phase 2 — Data  [DONE]
 - [x] P2.1 data/story-bible.md                                                 attempts: 1
@@ -126,9 +126,10 @@ Blocked: no. B1–B4 from the remote sandbox do not apply on the laptop and are 
 - [x] `check-seed` PASS on PGlite and on Supabase (`pg`)
 - [x] `check-api` 20/20 · `check-auth` PASS · `check-schema` PASS (both drivers)
 - [x] `run-evals` — 11/12 (previous run 10/12), LANTERN passing
-- [~] Deployed URL serves the app behind the password — Vercel reports the deployment for HEAD
-      as successful; the URL is behind Vercel SSO and the CLI is not logged in, so neither the
-      password page nor `/api/health` could be fetched. **Needs the human** (KNOWN_ISSUES).
+- [x] Deployed URL serves the app behind the password — https://fusion-cell-skwirls-projects.vercel.app:
+      `/api/health` → ok, driver pg, 169 entities, 80 reports; login and `/api/entities/:id` verified
+      from outside. Remaining human step: switch `DATABASE_URL` to port 6543 (D34) so parallel
+      requests stop hitting the session pooler's 15-client limit.
 - [x] Every UI value traces to a database row — third fresh-context review (D30): feed rows,
       timeline density and citation chips traced to rows; e2e intercepts only simulate failures
 - [x] Ledgers current
