@@ -49,7 +49,8 @@ export async function createDb(opts: CreateDbOptions = {}): Promise<DbHandle> {
     const connectionString = opts.connectionString ?? process.env.DATABASE_URL;
     if (!connectionString) throw new Error('DATABASE_URL is required for the pg driver');
     // Serverless: keep the pool tiny. Supabase's session pooler multiplexes for us.
-    const pool = new Pool({ connectionString, max: 3, idleTimeoutMillis: 10_000 });
+    // Fail fast on an unreachable host (a direct IPv6-only Supabase host from Vercel times out otherwise).
+    const pool = new Pool({ connectionString, max: 3, idleTimeoutMillis: 10_000, connectionTimeoutMillis: 10_000 });
     const db = drizzle(pool, { schema });
     return {
       db,
